@@ -3,10 +3,24 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
+// ─── CV 识别阶段 ────────────────────────────────────────────────────────────
+enum CVPhase { idle, scanning, detecting, matched }
+
+// 全局摄像头列表，在 main() 中初始化
+List<CameraDescription> _cameras = [];
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    _cameras = await availableCameras();
+  } catch (_) {
+    _cameras = [];
+  }
   runApp(const SignLanguageApp());
 }
 
@@ -37,6 +51,7 @@ class MonumentValleyHome extends StatefulWidget {
 
 class _MonumentValleyHomeState extends State<MonumentValleyHome> {
   int currentIndex = 0;
+  late PageController _pageController;
   late Timer _timer;
   String timeText = _formatTime(DateTime.now());
 
@@ -73,6 +88,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: currentIndex);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         timeText = _formatTime(DateTime.now());
@@ -82,6 +98,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _timer.cancel();
     super.dispose();
   }
@@ -99,24 +116,29 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       confidenceText = item.confidence;
       feedbackText = item.feedback;
       modeText = 'AI 正在陪练';
-      currentIndex = 2;
     });
+    _changeTab(2);
   }
 
   void startCamera() {
     setState(() {
       cameraStarted = true;
       modeText = '镜头已开启';
-      recognitionText = '镜头准备就绪：点击“模拟识别”查看教学反馈';
+      recognitionText = '镜头准备就绪：点击"模拟识别"查看教学反馈';
       confidenceText = 'Live';
       feedbackText =
       '后续可接入 camera / google_mlkit_pose_detection / MediaPipe Hands 做真实识别。';
-      currentIndex = 2;
     });
+    _changeTab(2);
   }
 
   void _changeTab(int index) {
     setState(() => currentIndex = index);
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -167,48 +189,42 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
                                   ),
                                 ],
                               ),
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        16,
-                                        16,
-                                        16,
-                                      ),
-                                      child: IndexedStack(
-                                        sizing: StackFit.expand,
-                                        index: currentIndex,
-                                        children: [
-                                          HomeScreen(
-                                            timeText: timeText,
-                                            onPracticeTap: () => setState(
-                                                  () => currentIndex = 2,
-                                            ),
-                                            onLessonsTap: () => setState(
-                                                  () => currentIndex = 1,
-                                            ),
-                                          ),
-                                          LessonsScreen(
-                                            onTabChanged: _changeTab,
-                                          ),
-                                          PracticeScreen(
-                                            modeText: modeText,
-                                            recognitionText: recognitionText,
-                                            confidenceText: confidenceText,
-                                            feedbackText: feedbackText,
-                                            cameraStarted: cameraStarted,
-                                            onStartCamera: startCamera,
-                                            onMockRecognize: mockRecognize,
-                                            onTabChanged: _changeTab,
-                                          ),
-                                          StoryScreen(onTabChanged: _changeTab),
-                                        ],
-                                      ),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  16,
+                                ),
+                                child: PageView(
+                                  controller: _pageController,
+                                  physics: const ClampingScrollPhysics(),
+                                  onPageChanged: (index) {
+                                    setState(() => currentIndex = index);
+                                  },
+                                  children: [
+                                    HomeScreen(
+                                      timeText: timeText,
+                                      onPracticeTap: () => _changeTab(2),
+                                      onLessonsTap: () => _changeTab(1),
+                                      onStoryTap: () => _changeTab(3),
                                     ),
-                                  ),
-                                ],
+                                    LessonsScreen(
+                                      onTabChanged: _changeTab,
+                                    ),
+                                    PracticeScreen(
+                                      modeText: modeText,
+                                      recognitionText: recognitionText,
+                                      confidenceText: confidenceText,
+                                      feedbackText: feedbackText,
+                                      cameraStarted: cameraStarted,
+                                      onStartCamera: startCamera,
+                                      onMockRecognize: mockRecognize,
+                                      onTabChanged: _changeTab,
+                                    ),
+                                    StoryScreen(onTabChanged: _changeTab),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -415,12 +431,14 @@ class HomeScreen extends StatelessWidget {
   final String timeText;
   final VoidCallback onPracticeTap;
   final VoidCallback onLessonsTap;
+  final VoidCallback onStoryTap;
 
   const HomeScreen({
     super.key,
     required this.timeText,
     required this.onPracticeTap,
     required this.onLessonsTap,
+    required this.onStoryTap,
   });
 
   @override
@@ -493,6 +511,7 @@ class HomeScreen extends StatelessWidget {
         BottomNav(currentIndex: 0, onChanged: (v) {
           if (v == 1) onLessonsTap();
           if (v == 2) onPracticeTap();
+          if (v == 3) onStoryTap();
         }),
       ],
     );
@@ -1713,6 +1732,163 @@ class WeeklyProgressCard extends StatelessWidget {
   }
 }
 
+// ─── MediaPipe-style 21 手部关键点（归一化坐标，手掌朝向镜头）─────────────
+const List<Offset> _kHandLandmarksBase = [
+  // 0 wrist
+  Offset(0.50, 0.90),
+  // 1-4 thumb
+  Offset(0.32, 0.82), Offset(0.18, 0.68), Offset(0.10, 0.54), Offset(0.04, 0.42),
+  // 5-8 index
+  Offset(0.38, 0.60), Offset(0.32, 0.40), Offset(0.30, 0.26), Offset(0.28, 0.14),
+  // 9-12 middle
+  Offset(0.50, 0.58), Offset(0.50, 0.38), Offset(0.50, 0.24), Offset(0.50, 0.11),
+  // 13-16 ring
+  Offset(0.62, 0.60), Offset(0.68, 0.40), Offset(0.70, 0.26), Offset(0.72, 0.14),
+  // 17-20 pinky
+  Offset(0.74, 0.64), Offset(0.82, 0.48), Offset(0.84, 0.36), Offset(0.86, 0.25),
+];
+
+// 骨骼连接对
+const List<List<int>> _kHandConnections = [
+  [0,1],[1,2],[2,3],[3,4],       // thumb
+  [0,5],[5,6],[6,7],[7,8],       // index
+  [0,9],[9,10],[10,11],[11,12],  // middle
+  [0,13],[13,14],[14,15],[15,16],// ring
+  [0,17],[17,18],[18,19],[19,20],// pinky
+  [5,9],[9,13],[13,17],          // palm arch
+];
+
+// ─── 手部骨架 CustomPainter ───────────────────────────────────────────────
+class HandSkeletonPainter extends CustomPainter {
+  final List<Offset> landmarks; // 已映射到像素坐标
+  final double opacity;
+  final Color jointColor;
+  final Color boneColor;
+
+  HandSkeletonPainter({
+    required this.landmarks,
+    required this.opacity,
+    this.jointColor = const Color(0xFF4FC3F7),
+    this.boneColor  = const Color(0xFF81D4FA),
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (landmarks.isEmpty) return;
+
+    // 骨骼线
+    final bonePaint = Paint()
+      ..color = boneColor.withOpacity(opacity * 0.80)
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    for (final conn in _kHandConnections) {
+      canvas.drawLine(landmarks[conn[0]], landmarks[conn[1]], bonePaint);
+    }
+
+    // 关键点圆
+    for (int i = 0; i < landmarks.length; i++) {
+      final isTip = [4, 8, 12, 16, 20].contains(i);
+      final r = isTip ? 5.0 : 3.5;
+
+      canvas.drawCircle(
+        landmarks[i],
+        r + 2,
+        Paint()..color = Colors.white.withOpacity(opacity * 0.40),
+      );
+      canvas.drawCircle(
+        landmarks[i],
+        r,
+        Paint()..color = jointColor.withOpacity(opacity),
+      );
+    }
+  }
+
+  @override
+  @override
+  bool shouldRepaint(covariant HandSkeletonPainter old) =>
+      old.opacity != opacity || old.landmarks != landmarks;
+}
+
+// ─── 扫描线 Painter ────────────────────────────────────────────────────────
+class ScanLinePainter extends CustomPainter {
+  final double progress; // 0~1 from top to bottom
+
+  ScanLinePainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height * progress;
+    final gradient = LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [
+        Colors.transparent,
+        const Color(0xFF4FC3F7).withOpacity(0.85),
+        const Color(0xFF80DEEA).withOpacity(0.95),
+        const Color(0xFF4FC3F7).withOpacity(0.85),
+        Colors.transparent,
+      ],
+    );
+    final paint = Paint()
+      ..shader = gradient.createShader(Rect.fromLTWH(0, y - 1.5, size.width, 3))
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+    // glow trail
+    final glowPaint = Paint()
+      ..color = const Color(0xFF4FC3F7).withOpacity(0.08)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRect(
+      Rect.fromLTWH(0, math.max(0, y - 28), size.width, 30),
+      glowPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant ScanLinePainter old) => old.progress != progress;
+}
+
+// ─── 取景框角括号 Painter ─────────────────────────────────────────────────
+class ViewfinderCornerPainter extends CustomPainter {
+  final Color color;
+  final double opacity;
+
+  ViewfinderCornerPainter({required this.color, required this.opacity});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withOpacity(opacity)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    const len = 22.0;
+    const m = 16.0; // margin from edge
+
+    // top-left
+    canvas.drawLine(Offset(m, m + len), Offset(m, m), paint);
+    canvas.drawLine(Offset(m, m), Offset(m + len, m), paint);
+    // top-right
+    canvas.drawLine(Offset(size.width - m - len, m), Offset(size.width - m, m), paint);
+    canvas.drawLine(Offset(size.width - m, m), Offset(size.width - m, m + len), paint);
+    // bottom-left
+    canvas.drawLine(Offset(m, size.height - m - len), Offset(m, size.height - m), paint);
+    canvas.drawLine(Offset(m, size.height - m), Offset(m + len, size.height - m), paint);
+    // bottom-right
+    canvas.drawLine(Offset(size.width - m - len, size.height - m), Offset(size.width - m, size.height - m), paint);
+    canvas.drawLine(Offset(size.width - m, size.height - m - len), Offset(size.width - m, size.height - m), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant ViewfinderCornerPainter old) => old.opacity != opacity;
+}
+
+// ─── 全功能 CV 摄像头展示框 ───────────────────────────────────────────────
 class CameraDemoBox extends StatefulWidget {
   final bool cameraStarted;
   final String recognitionText;
@@ -1730,148 +1906,627 @@ class CameraDemoBox extends StatefulWidget {
 }
 
 class _CameraDemoBoxState extends State<CameraDemoBox>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+    with TickerProviderStateMixin {
+  // ── 动画控制器 ──────────────────────────────────────────────────────────
+  late final AnimationController _scanCtrl;
+  late final AnimationController _jitterCtrl;
+  late final AnimationController _pulseCtrl;
+  late final AnimationController _confCtrl;
+
+  // ── CV 状态 ──────────────────────────────────────────────────────────────
+  CVPhase _phase = CVPhase.idle;
+  Timer? _phaseTimer;
+  final _rand = math.Random();
+  List<Offset> _landmarks = [];
+
+  // ── 真实摄像头 ──────────────────────────────────────────────────────────
+  CameraController? _cameraController;
+  bool _cameraReady = false;
+  String? _cameraError;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    _scanCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1600),
+    )..repeat();
+
+    _jitterCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    )..addStatusListener((s) {
+      if (s == AnimationStatus.completed) {
+        _jitterCtrl.reverse();
+      } else if (s == AnimationStatus.dismissed) {
+        if (_phase == CVPhase.detecting || _phase == CVPhase.scanning) {
+          _jitterCtrl.forward();
+        }
+      }
+    });
+
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
+
+    _confCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _buildLandmarks();
+
+    // 如果外部已经标记为已开启，立即初始化
+    if (widget.cameraStarted) {
+      _initCamera();
+    }
+  }
+
+  // ── 初始化真实摄像头 ─────────────────────────────────────────────────────
+  Future<void> _initCamera() async {
+    // 1. 请求权限
+    final status = await Permission.camera.request();
+    if (!mounted) return;
+    if (!status.isGranted) {
+      setState(() => _cameraError = '摄像头权限被拒绝，请在设置中开启');
+      return;
+    }
+
+    // 2. 选择前置或后置摄像头（优先后置，识别手势更自然）
+    if (_cameras.isEmpty) {
+      setState(() => _cameraError = '未检测到可用摄像头');
+      return;
+    }
+    final cam = _cameras.firstWhere(
+      (c) => c.lensDirection == CameraLensDirection.front,
+      orElse: () => _cameras.first,
+    );
+
+    // 3. 初始化控制器
+    final ctrl = CameraController(
+      cam,
+      ResolutionPreset.medium,
+      enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.jpeg,
+    );
+
+    try {
+      await ctrl.initialize();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _cameraError = '摄像头初始化失败：$e');
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _cameraController = ctrl;
+      _cameraReady = true;
+      _cameraError = null;
+    });
+
+    // 开启 CV 流程
+    _startCVFlow();
+  }
+
+  void _buildLandmarks([double jitter = 0]) {
+    _landmarks = _kHandLandmarksBase.map((p) {
+      final dx = (p.dx + (_rand.nextDouble() - 0.5) * jitter);
+      final dy = (p.dy + (_rand.nextDouble() - 0.5) * jitter);
+      return Offset(dx.clamp(0.0, 1.0), dy.clamp(0.0, 1.0));
+    }).toList();
+  }
+
+  @override
+  void didUpdateWidget(CameraDemoBox old) {
+    super.didUpdateWidget(old);
+    // 外部首次触发"开始镜头"
+    if (widget.cameraStarted && !old.cameraStarted) {
+      _initCamera();
+    }
+    // 外部触发"模拟识别"（confidenceText 变化，非 Live/-- 状态）
+    if (old.confidenceText != widget.confidenceText &&
+        widget.confidenceText != '--' &&
+        widget.confidenceText != 'Live') {
+      _startCVFlow();
+    }
+  }
+
+  void _startCVFlow() {
+    _phaseTimer?.cancel();
+    setState(() => _phase = CVPhase.scanning);
+    _jitterCtrl.forward();
+
+    _phaseTimer = Timer(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
+      setState(() {
+        _phase = CVPhase.detecting;
+        _buildLandmarks(0.03);
+      });
+      _phaseTimer = Timer(const Duration(milliseconds: 1100), () {
+        if (!mounted) return;
+        setState(() {
+          _phase = CVPhase.matched;
+          _buildLandmarks(0.008);
+        });
+        _confCtrl.forward(from: 0);
+        // 8s 后回 idle（保持摄像头画面，只重置识别状态）
+        _phaseTimer = Timer(const Duration(seconds: 8), () {
+          if (!mounted) return;
+          setState(() => _phase = _cameraReady ? CVPhase.scanning : CVPhase.idle);
+          _confCtrl.animateTo(0, duration: const Duration(milliseconds: 500));
+          if (_cameraReady) _startCVFlow(); // 持续循环检测
+        });
+      });
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scanCtrl.dispose();
+    _jitterCtrl.dispose();
+    _pulseCtrl.dispose();
+    _confCtrl.dispose();
+    _phaseTimer?.cancel();
+    _cameraController?.dispose();
     super.dispose();
+  }
+
+  Color get _phaseColor {
+    switch (_phase) {
+      case CVPhase.idle: return const Color(0xFFB0BEC5);
+      case CVPhase.scanning: return const Color(0xFF4FC3F7);
+      case CVPhase.detecting: return const Color(0xFFFFD54F);
+      case CVPhase.matched: return const Color(0xFF81C784);
+    }
+  }
+
+  String get _phaseLabel {
+    switch (_phase) {
+      case CVPhase.idle: return '等待手势';
+      case CVPhase.scanning: return '扫描中…';
+      case CVPhase.detecting: return '检测关键点…';
+      case CVPhase.matched: return '✓ 匹配成功';
+    }
+  }
+
+  List<Offset> _mapLandmarks(Size boxSize) {
+    if (_landmarks.isEmpty) _buildLandmarks();
+    // 将归一化坐标映射到 box 内的一个居中区域
+    const padH = 0.12, padV = 0.08;
+    return _landmarks.map((p) {
+      final x = (padH + p.dx * (1 - padH * 2)) * boxSize.width;
+      final y = (padV + p.dy * (1 - padV * 2 - 0.16)) * boxSize.height;
+      return Offset(x, y);
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 260,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0x61A4CAD6), Color(0x24FFFFFF)],
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFD6EEF2), Color(0xFFF0E2F1)],
-                ),
-              ),
+    final bool showSkeleton =
+        _phase == CVPhase.detecting || _phase == CVPhase.matched;
+    final bool showScan =
+        _phase == CVPhase.scanning || _phase == CVPhase.detecting;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── 主摄像框 ──────────────────────────────────────────────────
+        Container(
+          height: 260,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF1A2540).withOpacity(0.82),
+                const Color(0xFF0D1B2A).withOpacity(0.92),
+              ],
             ),
-            if (widget.cameraStarted)
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        const Color(0xFF99B8C3).withOpacity(0.20),
-                        const Color(0xFF6B8296).withOpacity(0.34),
-                      ],
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Camera Preview Placeholder',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.4,
+            boxShadow: [
+              BoxShadow(
+                color: _phaseColor.withOpacity(0.22),
+                blurRadius: 28,
+                spreadRadius: 2,
+              ),
+            ],
+            border: Border.all(
+              color: _phaseColor.withOpacity(0.45),
+              width: 1.4,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final boxSize = Size(constraints.maxWidth, constraints.maxHeight);
+                final mappedLandmarks = _mapLandmarks(boxSize);
+
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // ── 真实摄像头 or 占位背景 ─────────────────────
+                    if (_cameraReady && _cameraController != null)
+                      // 真实 CameraPreview（镜像前置摄像头）
+                      Transform.scale(
+                        scaleX: -1, // 前置摄像头左右镜像
+                        child: CameraPreview(_cameraController!),
+                      )
+                    else if (_cameraError != null)
+                      // 权限被拒/初始化失败时显示错误提示
+                      Container(
+                        color: const Color(0xFF0D1B2A),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.no_photography_outlined,
+                                  color: Color(0xFF4FC3F7), size: 36),
+                              const SizedBox(height: 10),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Text(
+                                  _cameraError!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Color(0xFF81D4FA),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      // 未开启摄像头时的深色占位
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF1B2A3A), Color(0xFF10192B)],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-              )
-            else
-              const Center(child: CameraHandArt()),
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                final scale = 1 + (_controller.value * 0.03);
-                final opacity = 0.45 + ((1 - _controller.value) * 0.35);
-                return Center(
-                  child: Transform.scale(
-                    scale: scale,
-                    child: Container(
-                      margin: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: const Color(0x402E3557).withOpacity(opacity),
-                          width: 2,
+
+                    // 网格点背景（未开启摄像头时显示）
+                    if (!_cameraReady)
+                      CustomPaint(
+                        painter: _GridDotPainter(),
+                      ),
+
+                    // 扫描线
+                    if (showScan)
+                      AnimatedBuilder(
+                        animation: _scanCtrl,
+                        builder: (_, _) => CustomPaint(
+                          painter: ScanLinePainter(_scanCtrl.value),
+                        ),
+                      ),
+
+                    // 手部骨架
+                    if (showSkeleton)
+                      AnimatedBuilder(
+                        animation: _jitterCtrl,
+                        builder: (_, _) {
+                          final jitter = _phase == CVPhase.detecting ? 0.012 : 0.004;
+                          final jitteredLandmarks = mappedLandmarks.map((p) {
+                            return Offset(
+                              p.dx + (_rand.nextDouble() - 0.5) * jitter * boxSize.width,
+                              p.dy + (_rand.nextDouble() - 0.5) * jitter * boxSize.height,
+                            );
+                          }).toList();
+                          return CustomPaint(
+                            painter: HandSkeletonPainter(
+                              landmarks: jitteredLandmarks,
+                              opacity: _phase == CVPhase.matched ? 0.92 : 0.72,
+                              jointColor: _phase == CVPhase.matched
+                                  ? const Color(0xFF81C784)
+                                  : const Color(0xFF4FC3F7),
+                              boneColor: _phase == CVPhase.matched
+                                  ? const Color(0xFFA5D6A7)
+                                  : const Color(0xFF81D4FA),
+                            ),
+                          );
+                        },
+                      ),
+
+                    // 取景框角括号（pulse）
+                    AnimatedBuilder(
+                      animation: _pulseCtrl,
+                      builder: (_, _) => CustomPaint(
+                        painter: ViewfinderCornerPainter(
+                          color: _phaseColor,
+                          opacity: 0.55 + _pulseCtrl.value * 0.40,
                         ),
                       ),
                     ),
-                  ),
+
+                    // idle 时显示手部剪影提示
+                    if (_phase == CVPhase.idle)
+                      Center(
+                        child: AnimatedBuilder(
+                          animation: _pulseCtrl,
+                          builder: (_, _) => Opacity(
+                            opacity: 0.20 + _pulseCtrl.value * 0.15,
+                            child: const CameraHandArt(),
+                          ),
+                        ),
+                      ),
+
+                    // matched 时显示识别词标注框
+                    if (_phase == CVPhase.matched)
+                      Positioned(
+                        top: 18,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF81C784).withOpacity(0.22),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFF81C784).withOpacity(0.55),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              widget.recognitionText.replaceFirst('识别结果：', ''),
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE8F5E9),
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // 底部状态栏
+                    Positioned(
+                      left: 12,
+                      right: 12,
+                      bottom: 12,
+                      child: Row(
+                        children: [
+                          // 阶段指示点
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 350),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _phaseColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _phaseColor.withOpacity(0.60),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: Text(
+                              _phaseLabel,
+                              key: ValueKey(_phase),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _phaseColor,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          // 置信度
+                          if (widget.confidenceText != '--')
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.10),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                widget.confidenceText,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: _phaseColor,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
-            Positioned(
-              left: 14,
-              right: 14,
-              bottom: 14,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  color: Colors.white.withOpacity(0.70),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF2E3557).withOpacity(0.08),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.recognitionText,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF2E3557),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.confidenceText,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2E3557),
-                      ),
-                    ),
-                  ],
+          ),
+        ),
+
+        // ── 置信度动画条 ─────────────────────────────────────────────
+        const SizedBox(height: 10),
+        _ConfidenceBar(
+          controller: _confCtrl,
+          phase: _phase,
+          phaseColor: _phaseColor,
+          label: widget.confidenceText == '--'
+              ? '等待识别'
+              : '置信度 ${widget.confidenceText}',
+        ),
+
+        // ── 四阶段状态步进指示 ─────────────────────────────────────
+        const SizedBox(height: 10),
+        _PhaseStepRow(phase: _phase),
+      ],
+    );
+  }
+}
+
+// ─── 网格点背景 ───────────────────────────────────────────────────────────
+class _GridDotPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.045)
+      ..style = PaintingStyle.fill;
+    const gap = 22.0;
+    for (double x = gap; x < size.width; x += gap) {
+      for (double y = gap; y < size.height; y += gap) {
+        canvas.drawCircle(Offset(x, y), 1.1, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GridDotPainter old) => false;
+}
+
+// ─── 置信度条 Widget ─────────────────────────────────────────────────────
+class _ConfidenceBar extends StatelessWidget {
+  final AnimationController controller;
+  final CVPhase phase;
+  final Color phaseColor;
+  final String label;
+
+  const _ConfidenceBar({
+    required this.controller,
+    required this.phase,
+    required this.phaseColor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF5F678F),
+              ),
+            ),
+            const Spacer(),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Text(
+                _phaseHint(phase),
+                key: ValueKey(phase),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: phaseColor.withOpacity(0.80),
                 ),
               ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 5),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: AnimatedBuilder(
+            animation: controller,
+            builder: (_, _) {
+              return LinearProgressIndicator(
+                value: controller.value,
+                minHeight: 7,
+                backgroundColor: const Color(0xFF5F678F).withOpacity(0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(phaseColor),
+              );
+            },
+          ),
+        ),
+      ],
     );
+  }
+
+  String _phaseHint(CVPhase p) {
+    switch (p) {
+      case CVPhase.idle: return '请将手放入取景框';
+      case CVPhase.scanning: return '正在扫描画面…';
+      case CVPhase.detecting: return '提取关键点中…';
+      case CVPhase.matched: return '动作识别完成 🎉';
+    }
+  }
+}
+
+// ─── 四阶段步进条 ─────────────────────────────────────────────────────────
+class _PhaseStepRow extends StatelessWidget {
+  final CVPhase phase;
+
+  const _PhaseStepRow({required this.phase});
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = [
+      (CVPhase.idle, '待机'),
+      (CVPhase.scanning, '扫描'),
+      (CVPhase.detecting, '检测'),
+      (CVPhase.matched, '匹配'),
+    ];
+
+    return Row(
+      children: steps.map((s) {
+        final active = s.$1.index <= phase.index;
+        final current = s.$1 == phase;
+        return Expanded(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 400),
+                      height: 3,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color: active
+                            ? _colorFor(s.$1)
+                            : const Color(0xFF5F678F).withOpacity(0.14),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      s.$2,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: current ? FontWeight.w700 : FontWeight.w400,
+                        color: active
+                            ? _colorFor(s.$1)
+                            : const Color(0xFF5F678F).withOpacity(0.45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (s.$1 != CVPhase.matched)
+                const SizedBox(width: 4),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Color _colorFor(CVPhase p) {
+    switch (p) {
+      case CVPhase.idle: return const Color(0xFFB0BEC5);
+      case CVPhase.scanning: return const Color(0xFF4FC3F7);
+      case CVPhase.detecting: return const Color(0xFFFFD54F);
+      case CVPhase.matched: return const Color(0xFF81C784);
+    }
   }
 }
 
