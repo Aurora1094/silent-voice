@@ -29,148 +29,122 @@ class ImmersiveHomeScreen extends StatelessWidget {
         final extraCompact = constraints.maxHeight < 780 || constraints.maxWidth < 370;
         final gap = extraCompact ? 8.0 : 12.0;
         final horizontalPadding = compact ? 18.0 : 20.0;
-        final topInset = viewPadding.top + (compact ? 12.0 : 18.0);
-        final bottomInset = viewPadding.bottom + 14.0;
+        final topInset = viewPadding.top + (compact ? 10.0 : 16.0);
+        final navBottomInset = viewPadding.bottom + 14.0;
+        final contentBottomInset = navBottomInset + (compact ? 88.0 : 94.0);
         final buttonHeight = compact ? 50.0 : 58.0;
-        final navHeight = compact ? 72.0 : 78.0;
-        final availableHeight = constraints.maxHeight - topInset - bottomInset;
-        final fixedHeight =
-            (compact ? 34.0 : 38.0) + buttonHeight + 24.0 + navHeight + (gap * 5);
-        final remaining = (availableHeight - fixedHeight).clamp(320.0, 620.0);
-        final heroHeight = remaining * (extraCompact ? 0.42 : 0.45);
-        final cardHeight = remaining * (extraCompact ? 0.22 : 0.24);
-        final progressHeight = remaining - heroHeight - cardHeight;
+        final availableHeight =
+            constraints.maxHeight - topInset - contentBottomInset;
 
         return Stack(
           children: [
             const Positioned.fill(child: _HomeAtmosphere()),
             Positioned.fill(
-              child: Padding(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
                   topInset,
                   horizontalPadding,
-                  bottomInset,
+                  contentBottomInset,
                 ),
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: availableHeight),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: const [
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: availableHeight),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AspectRatio(
+                        aspectRatio: extraCompact
+                            ? 1.16
+                            : compact
+                                ? 1.24
+                                : 1.38,
+                        child: _HeroMonumentPanel(
+                          compact: compact,
+                          onStoryTap: onStoryTap,
+                        ),
+                      ),
+                      SizedBox(height: gap),
+                      SizedBox(
+                        height: buttonHeight,
+                        child: Row(
+                          children: [
                             Expanded(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: _PillTag(
-                                  text: 'CV 手语识别 × 沉浸式教学',
-                                  solid: true,
-                                ),
+                              child: _PrimaryActionButton(
+                                label: '开始练习',
+                                compact: compact,
+                                onTap: onPracticeTap,
                               ),
                             ),
-                            SizedBox(width: 12),
-                            _PillTag(
-                              text: '愿每一个手势都被看见',
-                              solid: false,
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: _GlassActionButton(
+                                label: '课程地图',
+                                compact: compact,
+                                onTap: onLessonsTap,
+                              ),
                             ),
                           ],
                         ),
-                        SizedBox(height: gap),
-                        SizedBox(
-                          height: heroHeight,
-                          child: _HeroMonumentPanel(
-                            compact: compact,
-                            onStoryTap: onStoryTap,
+                      ),
+                      SizedBox(height: gap),
+                      Text(
+                        '今日旅程',
+                        style: TextStyle(
+                          fontSize: compact ? 18 : 20,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF27314F),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Monument Valley Mood',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF7B85A2),
+                        ),
+                      ),
+                      SizedBox(height: gap),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _JourneyGlassCard(
+                              compact: compact,
+                              title: '基础手势',
+                              description: '从问候、感谢等高频手势开始，建立最自然的表达感。',
+                              icon: Icons.sign_language_rounded,
+                              accent: const Color(0xFFFFD6C8),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: gap),
-                        SizedBox(
-                          height: buttonHeight,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _PrimaryActionButton(
-                                  label: '开始练习',
-                                  compact: compact,
-                                  onTap: onPracticeTap,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: _GlassActionButton(
-                                  label: '课程地图',
-                                  compact: compact,
-                                  onTap: onLessonsTap,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _JourneyGlassCard(
+                              compact: compact,
+                              title: '实时识别',
+                              description: '用镜头捕捉动作细节，边练边看反馈，让学习更有陪伴感。',
+                              icon: Icons.camera_alt_outlined,
+                              accent: const Color(0xFFD7E7FF),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: gap),
-                        Text(
-                          '今日旅程',
-                          style: TextStyle(
-                            fontSize: compact ? 18 : 20,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF27314F),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Monument Valley Mood',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF7B85A2),
-                          ),
-                        ),
-                        SizedBox(height: gap),
-                        SizedBox(
-                          height: cardHeight,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _JourneyGlassCard(
-                                  compact: compact,
-                                  title: '基础手势',
-                                  description: '从问候、感谢等高频手势开始，建立最自然的表达感。',
-                                  icon: Icons.sign_language_rounded,
-                                  accent: const Color(0xFFFFD6C8),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _JourneyGlassCard(
-                                  compact: compact,
-                                  title: '实时识别',
-                                  description: '用镜头捕捉动作细节，边练边看反馈，让学习更有陪伴感。',
-                                  icon: Icons.camera_alt_outlined,
-                                  accent: const Color(0xFFD7E7FF),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: gap),
-                        SizedBox(
-                          height: progressHeight,
-                          child: _LearningProgressCard(
-                            compact: compact,
-                            progress: progress,
-                            onLessonsTap: onLessonsTap,
-                          ),
-                        ),
-                        SizedBox(height: gap),
-                        SizedBox(
-                          height: navHeight,
-                          child: bottomNav,
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                      SizedBox(height: gap),
+                      _LearningProgressCard(
+                        compact: compact,
+                        progress: progress,
+                        onLessonsTap: onLessonsTap,
+                      ),
+                    ],
                   ),
                 ),
               ),
+            ),
+            Positioned(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              bottom: navBottomInset,
+              child: bottomNav,
             ),
           ],
         );
@@ -464,49 +438,6 @@ class _HeroMonumentPanel extends StatelessWidget {
   }
 }
 
-class _PillTag extends StatelessWidget {
-  final String text;
-  final bool solid;
-
-  const _PillTag({
-    required this.text,
-    required this.solid,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            color: solid
-                ? Colors.white.withOpacity(0.82)
-                : Colors.white.withOpacity(0.40),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.65),
-              width: 1,
-            ),
-          ),
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: solid ? const Color(0xFF4A5677) : const Color(0xFF5F6A89),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _PrimaryActionButton extends StatelessWidget {
   final String label;
   final bool compact;
@@ -638,6 +569,7 @@ class _JourneyGlassCard extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: compact ? 42 : 48,
@@ -652,7 +584,7 @@ class _JourneyGlassCard extends StatelessWidget {
                   color: const Color(0xFF3E4A68),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: compact ? 12 : 18),
               Text(
                 title,
                 maxLines: 1,
@@ -765,32 +697,72 @@ class _LearningProgressCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: compact ? 10 : 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ProgressMetricChip(
-                      compact: compact,
-                      label: '已解锁',
-                      value: '${progress.unlockedCount} 节',
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _ProgressMetricChip(
-                      compact: compact,
-                      label: '下一节',
-                      value: progress.nextLesson?.title ?? '继续当前课程',
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _CompactGlassButton(
-                      label: '查看地图',
-                      compact: compact,
-                      onTap: onLessonsTap,
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final narrow = constraints.maxWidth < 336;
+                  if (narrow) {
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _ProgressMetricChip(
+                                compact: compact,
+                                label: '已解锁',
+                                value: '${progress.unlockedCount} 节',
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _ProgressMetricChip(
+                                compact: compact,
+                                label: '下一节',
+                                value: progress.nextLesson?.title ?? '继续当前课程',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: _CompactGlassButton(
+                            label: '查看地图',
+                            compact: compact,
+                            onTap: onLessonsTap,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _ProgressMetricChip(
+                          compact: compact,
+                          label: '已解锁',
+                          value: '${progress.unlockedCount} 节',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _ProgressMetricChip(
+                          compact: compact,
+                          label: '下一节',
+                          value: progress.nextLesson?.title ?? '继续当前课程',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _CompactGlassButton(
+                          label: '查看地图',
+                          compact: compact,
+                          onTap: onLessonsTap,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),

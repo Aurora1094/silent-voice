@@ -175,23 +175,8 @@ class MonumentCourseMapScreen extends StatefulWidget {
 }
 
 class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
-  static const double _mapWidth = 980;
-  static const double _mapHeight = 1560;
-
-  late final TransformationController _transformationController;
-  bool _matrixReady = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _transformationController = TransformationController();
-  }
-
-  @override
-  void dispose() {
-    _transformationController.dispose();
-    super.dispose();
-  }
+  static const double _mapWidth = 760;
+  static const double _mapHeight = 1600;
 
   @override
   Widget build(BuildContext context) {
@@ -232,32 +217,32 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
                       height: _mapHeight,
                       child: Stack(
                         children: [
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: _CourseMapScenePainter(courseMapLessons),
-                            ),
-                          ),
-                          const Positioned(
-                            left: 286,
-                            top: 176,
-                            child: _MainMonumentCluster(),
-                          ),
-                          const Positioned(
-                            left: 86,
-                            top: 902,
-                            child: _ReflectivePool(),
-                          ),
-                          const Positioned(
-                            right: 96,
-                            top: 336,
-                            child: _MiniTower(),
-                          ),
-                          for (final lesson in courseMapLessons)
-                            Positioned(
-                              left: (_mapWidth * lesson.xAlign) - 38,
-                              top: lesson.top,
-                              child: _CourseMapNode(
-                                lesson: lesson,
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _CourseMapScenePainter(courseMapLessons),
+                        ),
+                      ),
+                      const Positioned(
+                        left: 184,
+                        top: 172,
+                        child: _MainMonumentCluster(),
+                      ),
+                      const Positioned(
+                        left: 44,
+                        top: 964,
+                        child: _ReflectivePool(),
+                      ),
+                      const Positioned(
+                        right: 34,
+                        top: 362,
+                        child: _MiniTower(),
+                      ),
+                      for (final lesson in courseMapLessons)
+                        Positioned(
+                          left: (_mapWidth * lesson.xAlign) - 56,
+                          top: lesson.top,
+                          child: _CourseMapNode(
+                            lesson: lesson,
                                 onTap: () => _showLessonSheet(context, lesson),
                               ),
                             ),
@@ -551,101 +536,129 @@ class _CourseMapNodeState extends State<_CourseMapNode>
         final glow = lesson.current ? 0.68 + (_controller.value * 0.32) : 0.42;
         return GestureDetector(
           onTap: widget.onTap,
-          child: Column(
+          child: SizedBox(
+            width: 118,
+            child: Column(
             children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          Colors.white.withOpacity(locked ? 0.82 : 0.98),
-                          (locked
-                                  ? const Color(0xFFD0CBD9)
-                                  : lesson.colors.first)
-                              .withOpacity(0.96),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.82),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (locked
-                                  ? const Color(0xFFBCB6C6)
-                                  : lesson.colors.first)
-                              .withOpacity(glow),
-                          blurRadius: lesson.current ? 30 : 18,
-                          spreadRadius: lesson.current ? 4 : 1,
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          color: Colors.white.withOpacity(0.82),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF2E3557).withOpacity(0.06),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          locked ? Icons.lock_outline_rounded : lesson.icon,
-                          size: 22,
-                          color: locked
-                              ? const Color(0xFF8B8795)
-                              : const Color(0xFF47516E),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (completed)
+              SizedBox(
+                width: 118,
+                height: 98,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
                     Positioned(
-                      right: -2,
-                      top: -2,
+                      bottom: 0,
+                      child: CustomPaint(
+                        size: const Size(108, 58),
+                        painter: _NodePedestalPainter(
+                          topColor: locked
+                              ? const Color(0xFFE5E0EA)
+                              : lesson.colors.last,
+                          frontColor: locked
+                              ? const Color(0xFFD5D0DD)
+                              : lesson.colors.first.withOpacity(0.78),
+                          sideColor: locked
+                              ? const Color(0xFFC2BCCB)
+                              : const Color(0xFFD9898F).withOpacity(
+                                  lesson.lane.isEven ? 0.74 : 0.58,
+                                ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
                       child: Container(
-                        width: 24,
-                        height: 24,
+                        width: 84,
+                        height: 84,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.92),
+                          gradient: RadialGradient(
+                            colors: [
+                              Colors.white.withOpacity(locked ? 0.82 : 0.98),
+                              (locked
+                                      ? const Color(0xFFD0CBD9)
+                                      : lesson.colors.first)
+                                  .withOpacity(0.96),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.82),
+                            width: 1.2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: lesson.colors.first.withOpacity(0.42),
-                              blurRadius: 14,
+                              color: (locked
+                                      ? const Color(0xFFBCB6C6)
+                                      : lesson.colors.first)
+                                  .withOpacity(glow),
+                              blurRadius: lesson.current ? 34 : 20,
+                              spreadRadius: lesson.current ? 5 : 1,
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.check_rounded,
-                          size: 16,
-                          color: Color(0xFF3C516C),
+                        child: Center(
+                          child: Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              color: Colors.white.withOpacity(0.86),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF2E3557).withOpacity(0.06),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              locked ? Icons.lock_outline_rounded : lesson.icon,
+                              size: 24,
+                              color: locked
+                                  ? const Color(0xFF8B8795)
+                                  : const Color(0xFF47516E),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                ],
+                    if (completed)
+                      Positioned(
+                        right: 6,
+                        top: 8,
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.92),
+                            boxShadow: [
+                              BoxShadow(
+                                color: lesson.colors.first.withOpacity(0.42),
+                                blurRadius: 14,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.check_rounded,
+                            size: 16,
+                            color: Color(0xFF3C516C),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Container(
-                constraints: const BoxConstraints(maxWidth: 102),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                constraints: const BoxConstraints(maxWidth: 110),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
-                  color: Colors.white.withOpacity(0.54),
+                  color: Colors.white.withOpacity(0.58),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.64),
+                    color: Colors.white.withOpacity(0.68),
                     width: 1,
                   ),
                 ),
@@ -681,10 +694,57 @@ class _CourseMapNodeState extends State<_CourseMapNode>
               ),
             ],
           ),
+          ),
         );
       },
     );
   }
+}
+
+class _NodePedestalPainter extends CustomPainter {
+  final Color topColor;
+  final Color frontColor;
+  final Color sideColor;
+
+  const _NodePedestalPainter({
+    required this.topColor,
+    required this.frontColor,
+    required this.sideColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final skew = size.width * 0.18;
+    final topFace = Path()
+      ..moveTo(skew, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width - skew, size.height * 0.28)
+      ..lineTo(0, size.height * 0.28)
+      ..close();
+    final frontFace = Path()
+      ..moveTo(0, size.height * 0.28)
+      ..lineTo(size.width - skew, size.height * 0.28)
+      ..lineTo(size.width - skew, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    final sideFace = Path()
+      ..moveTo(size.width, 0)
+      ..lineTo(size.width - skew, size.height * 0.28)
+      ..lineTo(size.width - skew, size.height)
+      ..lineTo(size.width, size.height * 0.72)
+      ..close();
+
+    canvas.drawShadow(frontFace, const Color(0x162E3557), 12, false);
+    canvas.drawPath(topFace, Paint()..color = topColor);
+    canvas.drawPath(frontFace, Paint()..color = frontColor);
+    canvas.drawPath(sideFace, Paint()..color = sideColor);
+  }
+
+  @override
+  bool shouldRepaint(covariant _NodePedestalPainter oldDelegate) =>
+      oldDelegate.topColor != topColor ||
+      oldDelegate.frontColor != frontColor ||
+      oldDelegate.sideColor != sideColor;
 }
 
 class _CourseDetailSheet extends StatelessWidget {
@@ -1426,19 +1486,35 @@ class _CourseMapScenePainter extends CustomPainter {
     final mistPaint = Paint()..color = Colors.white.withOpacity(0.14);
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width * 0.30, 236),
-        width: 280,
+        center: Offset(size.width * 0.28, 248),
+        width: 240,
         height: 86,
       ),
       mistPaint,
     );
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width * 0.76, 1040),
-        width: 360,
+        center: Offset(size.width * 0.74, 1080),
+        width: 300,
         height: 94,
       ),
       mistPaint,
+    );
+
+    final capsulePaint = Paint()..color = const Color(0x66B8E2E6);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(560, 182, 76, 264),
+        const Radius.circular(38),
+      ),
+      capsulePaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(72, 138, 84, 242),
+        const Radius.circular(40),
+      ),
+      Paint()..color = const Color(0x40FFFFFF),
     );
 
     final pathShadow = Paint()
@@ -1474,58 +1550,67 @@ class _CourseMapScenePainter extends CustomPainter {
 
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(108, 232, 210, 98),
+      rect: const Rect.fromLTWH(56, 242, 180, 104),
       top: const Color(0xFFF7E5D5),
       front: const Color(0xFFE6B8BC),
       side: const Color(0xFFD4C8EA),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(620, 376, 218, 100),
+      rect: const Rect.fromLTWH(468, 376, 170, 104),
       top: const Color(0xFFF7E8D8),
       front: const Color(0xFFD8D0EF),
       side: const Color(0xFFB8AFD8),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(704, 612, 188, 96),
+      rect: const Rect.fromLTWH(528, 618, 152, 102),
       top: const Color(0xFFF7E6D6),
       front: const Color(0xFFEAB0A6),
       side: const Color(0xFFD88E96),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(300, 834, 240, 106),
+      rect: const Rect.fromLTWH(222, 854, 194, 112),
       top: const Color(0xFFF7E6D7),
       front: const Color(0xFFD8D0EE),
       side: const Color(0xFFBAB2DB),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(648, 1056, 228, 102),
+      rect: const Rect.fromLTWH(484, 1084, 182, 106),
       top: const Color(0xFFF8E7D7),
       front: const Color(0xFFE7B2B3),
       side: const Color(0xFFD5C8EA),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(122, 1280, 250, 110),
+      rect: const Rect.fromLTWH(84, 1326, 198, 112),
       top: const Color(0xFFF8E8D8),
       front: const Color(0xFFD8D1E8),
       side: const Color(0xFFBEB6D7),
     );
+    _drawPlatform(
+      canvas,
+      rect: const Rect.fromLTWH(258, 550, 122, 92),
+      top: const Color(0xFFF7E6D8),
+      front: const Color(0xFFE8C6BB),
+      side: const Color(0xFFD7CDEA),
+    );
 
-    _drawStairs(canvas, const Offset(642, 330), length: 104, tilt: 1);
-    _drawStairs(canvas, const Offset(776, 542), length: 112, tilt: 1);
-    _drawStairs(canvas, const Offset(132, 980), length: 102, tilt: -1);
-    _drawStairs(canvas, const Offset(684, 1184), length: 110, tilt: -1);
+    _drawStairs(canvas, const Offset(482, 334), length: 116, tilt: 1);
+    _drawStairs(canvas, const Offset(588, 556), length: 120, tilt: 1);
+    _drawStairs(canvas, const Offset(102, 1008), length: 110, tilt: -1);
+    _drawStairs(canvas, const Offset(512, 1202), length: 118, tilt: -1);
+    _drawStairs(canvas, const Offset(318, 650), length: 86, tilt: 1);
 
     final sparklePaint = Paint()
       ..color = Colors.white.withOpacity(0.52)
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
-    _drawSparkle(canvas, const Offset(874, 1324), sparklePaint);
-    _drawSparkle(canvas, const Offset(94, 748), sparklePaint);
+    _drawSparkle(canvas, const Offset(650, 1372), sparklePaint);
+    _drawSparkle(canvas, const Offset(74, 786), sparklePaint);
+    _drawSparkle(canvas, const Offset(538, 250), sparklePaint);
   }
 
   void _drawPlatform(
