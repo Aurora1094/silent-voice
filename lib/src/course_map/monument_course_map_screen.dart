@@ -250,35 +250,40 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                                   ),
                                 ),
                                 Positioned(
-                                  left: 152,
-                                  top: 190 + drift * 0.55,
+                                  left: 164,
+                                  top: 204 + drift * 0.50,
                                   child: const Opacity(
-                                    opacity: 0.92,
+                                    opacity: 0.84,
                                     child: _CentralMonument(),
                                   ),
                                 ),
                                 Positioned(
-                                  left: 2,
-                                  top: 110 + drift * 0.20,
+                                  left: -8,
+                                  top: 126 + drift * 0.16,
                                   child: const Opacity(
-                                    opacity: 0.68,
+                                    opacity: 0.48,
                                     child: _GlassAlcove(),
                                   ),
                                 ),
                                 Positioned(
-                                  right: 4,
-                                  top: 112 + drift * 0.25,
+                                  right: -8,
+                                  top: 130 + drift * 0.18,
                                   child: const Opacity(
-                                    opacity: 0.64,
+                                    opacity: 0.46,
                                     child: _SideCapsuleCluster(),
                                   ),
                                 ),
                                 Positioned(
-                                  left: 28,
-                                  top: 1184 + drift * 0.12,
+                                  left: 18,
+                                  top: 1206 + drift * 0.08,
                                   child: const Opacity(
-                                    opacity: 0.74,
+                                    opacity: 0.52,
                                     child: _WaterPillar(),
+                                  ),
+                                ),
+                                const Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: _PrimaryBridgeOverlayPainter(),
                                   ),
                                 ),
                                 for (var i = 0; i < courseMapLessons.length; i++)
@@ -971,24 +976,24 @@ class _CourseMapNodeState extends State<_CourseMapNode>
         return AnimatedScale(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          scale: selected ? 1.05 : 1,
+          scale: selected ? 1.03 : 1,
           child: GestureDetector(
             onTap: widget.onTap,
             child: SizedBox(
-              width: 154,
+              width: 148,
               child: Column(
                 children: [
                   SizedBox(
-                    width: 154,
-                    height: 156,
+                    width: 148,
+                    height: 148,
                     child: Stack(
                       alignment: Alignment.topCenter,
                       clipBehavior: Clip.none,
                       children: [
                         Positioned(
-                          bottom: 12,
+                          bottom: 16,
                           child: CustomPaint(
-                            size: const Size(136, 94),
+                            size: const Size(128, 88),
                             painter: _NodePedestalPainter(
                               topColor: locked
                                   ? const Color(0xFFE9E4EF)
@@ -1007,7 +1012,7 @@ class _CourseMapNodeState extends State<_CourseMapNode>
                           ),
                         ),
                         Positioned(
-                          top: lesson.current ? 8 : 4,
+                          top: lesson.current ? 10 : 8,
                           child: _NodeTotem(
                             lesson: lesson,
                             glow: breath + (selected ? 0.18 : 0),
@@ -1021,9 +1026,9 @@ class _CourseMapNodeState extends State<_CourseMapNode>
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: lesson.colors.first.withOpacity(0.18),
-                                      blurRadius: 26,
-                                      spreadRadius: 5,
+                                      color: lesson.colors.first.withOpacity(0.13),
+                                      blurRadius: 22,
+                                      spreadRadius: 2,
                                     ),
                                   ],
                                 ),
@@ -1032,11 +1037,11 @@ class _CourseMapNodeState extends State<_CourseMapNode>
                           ),
                         if (completed)
                           Positioned(
-                            right: 8,
-                            top: 18,
+                            right: 10,
+                            top: 20,
                             child: Container(
-                              width: 34,
-                              height: 34,
+                              width: 30,
+                              height: 30,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: const Color(0xFFFFE184).withOpacity(0.94),
@@ -1050,18 +1055,18 @@ class _CourseMapNodeState extends State<_CourseMapNode>
                               ),
                               child: const Icon(
                                 Icons.check_rounded,
-                                size: 18,
+                                size: 16,
                                 color: Color(0xFF6B5B37),
                               ),
                             ),
                           ),
                         if (lesson.current)
                           Positioned(
-                            right: 8,
-                            bottom: 18,
+                            right: 10,
+                            bottom: 20,
                             child: Container(
-                              width: 38,
-                              height: 38,
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: const Color(0xFFFFC8AF).withOpacity(0.98),
@@ -1075,44 +1080,12 @@ class _CourseMapNodeState extends State<_CourseMapNode>
                               ),
                               child: const Icon(
                                 Icons.play_arrow_rounded,
-                                size: 22,
+                                size: 20,
                                 color: Color(0xFF7E5E57),
                               ),
                             ),
                           ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    constraints: const BoxConstraints(maxWidth: 112),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      color: selected
-                          ? Colors.white.withOpacity(0.80)
-                          : Colors.white.withOpacity(0.66),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(selected ? 0.86 : 0.72),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      lesson.title,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: locked
-                            ? const Color(0xFF8B8795)
-                            : const Color(0xFF36405D),
-                      ),
                     ),
                   ),
                 ],
@@ -1150,8 +1123,8 @@ class _NodeTotem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
@@ -1170,8 +1143,8 @@ class _NodeTotem extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Container(
-            width: 42,
-            height: 88,
+            width: 38,
+            height: 82,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
               gradient: LinearGradient(
@@ -1192,8 +1165,8 @@ class _NodeTotem extends StatelessWidget {
             ),
             child: Center(
               child: Container(
-                width: 14,
-                height: 36,
+                width: 12,
+                height: 33,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: const Color(0xFF6C7B83).withOpacity(0.55),
@@ -1206,8 +1179,8 @@ class _NodeTotem extends StatelessWidget {
     }
 
     return Container(
-      width: 40,
-      height: 100,
+      width: 36,
+      height: 92,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
@@ -1235,13 +1208,13 @@ class _NodeTotem extends StatelessWidget {
           if (!locked && lesson.title == '谢谢')
             const Icon(
               Icons.auto_awesome_rounded,
-              size: 20,
+              size: 18,
               color: Color(0xFFF0C749),
             ),
           if (!locked && lesson.title == '谢谢') const SizedBox(height: 4),
           Container(
-            width: 14,
-            height: 36,
+            width: 12,
+            height: 34,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color: const Color(0xFF6C6876).withOpacity(0.48),
@@ -1259,37 +1232,17 @@ class _CentralMonument extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 438,
-      height: 756,
+      width: 410,
+      height: 710,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
-            left: 112,
-            top: 28,
+            left: 124,
+            top: 170,
             child: Container(
-              width: 194,
-              height: 522,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(70),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFFF5C8B6).withOpacity(0.42),
-                    const Color(0xFFDCC4DA).withOpacity(0.34),
-                    const Color(0xFFC8C6F0).withOpacity(0.32),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 126,
-            top: 160,
-            child: Container(
-              width: 166,
-              height: 236,
+              width: 154,
+              height: 220,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(44),
                 gradient: LinearGradient(
@@ -1332,9 +1285,9 @@ class _CentralMonument extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         height: 1.02,
-                        fontSize: 25,
+                        fontSize: 23,
                         fontWeight: FontWeight.w400,
-                        letterSpacing: 1.4,
+                        letterSpacing: 1.2,
                         color: Colors.white.withOpacity(0.92),
                       ),
                     ),
@@ -1342,17 +1295,17 @@ class _CentralMonument extends StatelessWidget {
                   Positioned(
                     left: 0,
                     right: 0,
-                    top: -36,
+                    top: -34,
                     child: Column(
                       children: [
                         const Icon(
                           Icons.star_rounded,
-                          size: 46,
+                          size: 40,
                           color: Color(0xFFF7D54C),
                         ),
                         Container(
-                          width: 26,
-                          height: 50,
+                          width: 22,
+                          height: 44,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(18),
                             gradient: const LinearGradient(
@@ -1370,11 +1323,11 @@ class _CentralMonument extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 40,
-            top: 224,
+            left: 42,
+            top: 232,
             child: Container(
-              width: 30,
-              height: 274,
+              width: 24,
+              height: 246,
               decoration: BoxDecoration(
                 color: const Color(0xFFE79296).withOpacity(0.72),
                 borderRadius: BorderRadius.circular(22),
@@ -1382,11 +1335,11 @@ class _CentralMonument extends StatelessWidget {
             ),
           ),
           Positioned(
-            right: 44,
-            top: 236,
+            right: 48,
+            top: 240,
             child: Container(
-              width: 30,
-              height: 254,
+              width: 24,
+              height: 232,
               decoration: BoxDecoration(
                 color: const Color(0xFFE4A49B).withOpacity(0.72),
                 borderRadius: BorderRadius.circular(22),
@@ -1394,11 +1347,11 @@ class _CentralMonument extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 72,
-            right: 74,
-            bottom: 164,
+            left: 86,
+            right: 86,
+            bottom: 168,
             child: Container(
-              height: 72,
+              height: 64,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: const LinearGradient(
@@ -1409,47 +1362,7 @@ class _CentralMonument extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            left: 156,
-            right: 156,
-            bottom: 214,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _archPillar(),
-                _archPillar(),
-              ],
-            ),
-          ),
-          Positioned(
-            left: 144,
-            right: 144,
-            bottom: 104,
-            child: Container(
-              height: 118,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.34),
-                  width: 12,
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(56),
-                ),
-              ),
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _archPillar() {
-    return Container(
-      width: 18,
-      height: 132,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.28),
-        borderRadius: BorderRadius.circular(18),
       ),
     );
   }
@@ -1714,39 +1627,27 @@ class _CourseScenePainter extends CustomPainter {
         .map((lesson) => Offset(size.width * lesson.xAlign, lesson.top + 84))
         .toList();
 
-    _drawRope(canvas, anchors[0], anchors[1]);
-    _drawRope(canvas, anchors[1], anchors[2]);
     _drawRope(canvas, anchors[2], anchors[3]);
     _drawRope(canvas, anchors[2], anchors[4]);
     _drawRope(canvas, anchors[3], anchors[5]);
 
-    _drawLadder(canvas, const Offset(220, 272), const Offset(502, 436));
-    _drawStairRibbon(canvas, const Offset(510, 512), const Offset(360, 794));
-    _drawStairRibbon(canvas, const Offset(334, 1112), const Offset(258, 1458));
-
     _drawGhostArch(
       canvas,
       rect: const Rect.fromLTWH(18, 208, 152, 266),
-      opacity: 0.12,
+      opacity: 0.08,
       angle: -0.18,
     );
     _drawSupportCapsule(
       canvas,
       rect: const Rect.fromLTWH(608, 84, 94, 246),
       color: const Color(0xFF9BD7EA),
-      opacity: 0.20,
+      opacity: 0.14,
     );
     _drawSupportCapsule(
       canvas,
       rect: const Rect.fromLTWH(582, 1130, 86, 238),
       color: const Color(0xFFF1C8C3),
-      opacity: 0.16,
-    );
-    _drawSupportCapsule(
-      canvas,
-      rect: const Rect.fromLTWH(36, 1276, 62, 156),
-      color: const Color(0xFF91DDF2),
-      opacity: 0.24,
+      opacity: 0.11,
     );
 
     _drawPlatform(
@@ -1758,13 +1659,6 @@ class _CourseScenePainter extends CustomPainter {
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(516, 936, 118, 58),
-      top: const Color(0xFFF8E7DA),
-      front: const Color(0xFFF0D4CF),
-      side: const Color(0xFFD68E89),
-    );
-    _drawPlatform(
-      canvas,
       rect: const Rect.fromLTWH(308, 1366, 122, 60),
       top: const Color(0xFFF6EAD9),
       front: const Color(0xFFE1D7EF),
@@ -1772,11 +1666,10 @@ class _CourseScenePainter extends CustomPainter {
     );
 
     final sparklePaint = Paint()
-      ..color = Colors.white.withOpacity(0.58)
+      ..color = Colors.white.withOpacity(0.42)
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
     _drawSparkle(canvas, const Offset(628, 310), sparklePaint);
-    _drawSparkle(canvas, const Offset(112, 684), sparklePaint);
     _drawSparkle(canvas, const Offset(632, 1432), sparklePaint);
   }
 
@@ -1791,44 +1684,40 @@ class _CourseScenePainter extends CustomPainter {
   }
 
   void _drawMist(Canvas canvas) {
-    final mist = Paint()..color = Colors.white.withOpacity(0.14);
+    final mist = Paint()..color = Colors.white.withOpacity(0.10);
     canvas.drawOval(
       Rect.fromCenter(
         center: const Offset(290, 346),
-        width: 420,
-        height: 116,
+        width: 360,
+        height: 100,
       ),
       mist,
     );
     canvas.drawOval(
       Rect.fromCenter(
         center: const Offset(510, 922),
-        width: 420,
-        height: 124,
+        width: 380,
+        height: 108,
       ),
       mist,
     );
   }
 
   void _drawParticles(Canvas canvas) {
-    final dot = Paint()..color = Colors.white.withOpacity(0.55);
+    final dot = Paint()..color = Colors.white.withOpacity(0.34);
     const points = [
       Offset(142, 214),
-      Offset(208, 246),
       Offset(336, 182),
       Offset(498, 226),
       Offset(638, 328),
-      Offset(104, 578),
       Offset(286, 620),
-      Offset(620, 730),
       Offset(184, 874),
       Offset(538, 956),
-      Offset(650, 1146),
       Offset(216, 1322),
       Offset(360, 1460),
     ];
     for (final point in points) {
-      canvas.drawCircle(point, 1.6, dot);
+      canvas.drawCircle(point, 1.4, dot);
     }
   }
 
@@ -1912,84 +1801,125 @@ class _CourseScenePainter extends CustomPainter {
   }
 
   void _drawRope(Canvas canvas, Offset start, Offset end) {
-    final shadow = Paint()
-      ..color = const Color(0x243A3560)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 18
-      ..strokeCap = StrokeCap.round;
-    final base = Paint()
-      ..color = const Color(0xFFE6D5B4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..strokeCap = StrokeCap.round;
-    final highlight = Paint()
-      ..color = const Color(0xFFF8EFDA)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, shadow);
-    canvas.drawLine(start, end, base);
-    canvas.drawLine(start, end, highlight);
-
-    final dx = end.dx - start.dx;
-    final dy = end.dy - start.dy;
-    for (var i = 1; i < 8; i++) {
-      final t = i / 8;
-      final px = start.dx + dx * t;
-      final py = start.dy + dy * t;
-      canvas.drawLine(
-        Offset(px - 8, py - 8),
-        Offset(px + 6, py + 6),
-        Paint()
-          ..color = const Color(0xFFDDCCA8)
-          ..strokeWidth = 2.4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
+    _drawLadderBridge(
+      canvas,
+      start,
+      end,
+      railOffset: 6.5,
+      railWidth: 3.4,
+      rungWidth: 2.6,
+      rungSpacing: 26,
+    );
   }
 
   void _drawLadder(Canvas canvas, Offset start, Offset end) {
-    final rail = Paint()
-      ..color = const Color(0xFFF0E2BF)
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, rail);
+    _drawLadderBridge(
+      canvas,
+      start,
+      end,
+      railOffset: 8.0,
+      railWidth: 3.8,
+      rungWidth: 2.8,
+      rungSpacing: 24,
+    );
+  }
+
+  void _drawStairRibbon(Canvas canvas, Offset start, Offset end) {
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
-    for (var i = 0; i < 6; i++) {
-      final t = i / 5;
-      final px = start.dx + dx * t;
-      final py = start.dy + dy * t;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length == 0) return;
+
+    final ux = dx / length;
+    final uy = dy / length;
+    final nx = -uy;
+    final ny = ux;
+
+    final beam = Paint()
+      ..color = const Color(0x2ED7C8F0)
+      ..strokeWidth = 15
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, beam);
+
+    final rungPaint = Paint()
+      ..color = const Color(0xFFEFE5C7)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final rungs = math.max(5, (length / 30).floor());
+    for (var i = 0; i < rungs; i++) {
+      final t = (i + 1) / (rungs + 1);
+      final cx = start.dx + dx * t;
+      final cy = start.dy + dy * t;
       canvas.drawLine(
-        Offset(px - 12, py - 8),
-        Offset(px + 2, py + 8),
-        Paint()
-          ..color = const Color(0xFFF7EED8)
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
+        Offset(cx - nx * 11, cy - ny * 11),
+        Offset(cx + nx * 7, cy + ny * 7),
+        rungPaint,
       );
     }
   }
 
-  void _drawStairRibbon(Canvas canvas, Offset start, Offset end) {
-    final beam = Paint()
-      ..color = const Color(0x38D7C8F0)
-      ..strokeWidth = 24
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, beam);
+  void _drawLadderBridge(
+    Canvas canvas,
+    Offset start,
+    Offset end, {
+    required double railOffset,
+    required double railWidth,
+    required double rungWidth,
+    required double rungSpacing,
+  }) {
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
-    for (var i = 0; i < 11; i++) {
-      final t = i / 10;
-      final px = start.dx + dx * t;
-      final py = start.dy + dy * t;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length == 0) return;
+
+    final ux = dx / length;
+    final uy = dy / length;
+    final nx = -uy;
+    final ny = ux;
+
+    final leftStart = Offset(start.dx + nx * railOffset, start.dy + ny * railOffset);
+    final leftEnd = Offset(end.dx + nx * railOffset, end.dy + ny * railOffset);
+    final rightStart = Offset(start.dx - nx * railOffset, start.dy - ny * railOffset);
+    final rightEnd = Offset(end.dx - nx * railOffset, end.dy - ny * railOffset);
+
+    final shadow = Paint()
+      ..color = const Color(0x16343A5E)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = railWidth + 2.2
+      ..strokeCap = StrokeCap.round;
+    final rail = Paint()
+      ..color = const Color(0xFFE8D9B6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = railWidth
+      ..strokeCap = StrokeCap.round;
+    final highlight = Paint()
+      ..color = const Color(0xFFFFF3DA)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = railWidth * 0.42
+      ..strokeCap = StrokeCap.round;
+    final rung = Paint()
+      ..color = const Color(0xFFF6EDD6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rungWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(leftStart, leftEnd, shadow);
+    canvas.drawLine(rightStart, rightEnd, shadow);
+    canvas.drawLine(leftStart, leftEnd, rail);
+    canvas.drawLine(rightStart, rightEnd, rail);
+    canvas.drawLine(leftStart, leftEnd, highlight);
+    canvas.drawLine(rightStart, rightEnd, highlight);
+
+    final rungCount = math.max(4, (length / rungSpacing).floor());
+    for (var i = 0; i < rungCount; i++) {
+      final t = (i + 1) / (rungCount + 1);
+      final cx = start.dx + dx * t;
+      final cy = start.dy + dy * t;
+      final rungInset = railOffset * 0.14;
       canvas.drawLine(
-        Offset(px - 16, py + 6),
-        Offset(px + 12, py - 6),
-        Paint()
-          ..color = const Color(0xFFF0E6C9)
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
+        Offset(cx - nx * (railOffset - rungInset), cy - ny * (railOffset - rungInset)),
+        Offset(cx + nx * (railOffset - rungInset), cy + ny * (railOffset - rungInset)),
+        rung,
       );
     }
   }
@@ -2009,4 +1939,106 @@ class _CourseScenePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CourseScenePainter oldDelegate) => false;
+}
+
+class _PrimaryBridgeOverlayPainter extends CustomPainter {
+  const _PrimaryBridgeOverlayPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _drawLadderBridge(
+      canvas,
+      const Offset(176, 262),
+      const Offset(526, 438),
+      railOffset: 8.2,
+      railWidth: 3.9,
+      rungWidth: 2.9,
+      rungSpacing: 24,
+    );
+    _drawLadderBridge(
+      canvas,
+      const Offset(522, 486),
+      const Offset(352, 826),
+      railOffset: 7.6,
+      railWidth: 3.7,
+      rungWidth: 2.8,
+      rungSpacing: 24,
+    );
+  }
+
+  void _drawLadderBridge(
+    Canvas canvas,
+    Offset start,
+    Offset end, {
+    required double railOffset,
+    required double railWidth,
+    required double rungWidth,
+    required double rungSpacing,
+  }) {
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final length = math.sqrt(dx * dx + dy * dy);
+    if (length == 0) return;
+
+    final nx = -(dy / length);
+    final ny = dx / length;
+
+    final leftStart =
+        Offset(start.dx + nx * railOffset, start.dy + ny * railOffset);
+    final leftEnd = Offset(end.dx + nx * railOffset, end.dy + ny * railOffset);
+    final rightStart =
+        Offset(start.dx - nx * railOffset, start.dy - ny * railOffset);
+    final rightEnd = Offset(end.dx - nx * railOffset, end.dy - ny * railOffset);
+
+    final shadow = Paint()
+      ..color = const Color(0x16343A5E)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = railWidth + 2.2
+      ..strokeCap = StrokeCap.round;
+    final rail = Paint()
+      ..color = const Color(0xFFE8D9B6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = railWidth
+      ..strokeCap = StrokeCap.round;
+    final highlight = Paint()
+      ..color = const Color(0xFFFFF3DA)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = railWidth * 0.42
+      ..strokeCap = StrokeCap.round;
+    final rung = Paint()
+      ..color = const Color(0xFFF6EDD6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rungWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(leftStart, leftEnd, shadow);
+    canvas.drawLine(rightStart, rightEnd, shadow);
+    canvas.drawLine(leftStart, leftEnd, rail);
+    canvas.drawLine(rightStart, rightEnd, rail);
+    canvas.drawLine(leftStart, leftEnd, highlight);
+    canvas.drawLine(rightStart, rightEnd, highlight);
+
+    final rungCount = math.max(4, (length / rungSpacing).floor());
+    for (var i = 0; i < rungCount; i++) {
+      final t = (i + 1) / (rungCount + 1);
+      final cx = start.dx + dx * t;
+      final cy = start.dy + dy * t;
+      final rungInset = railOffset * 0.14;
+      canvas.drawLine(
+        Offset(
+          cx - nx * (railOffset - rungInset),
+          cy - ny * (railOffset - rungInset),
+        ),
+        Offset(
+          cx + nx * (railOffset - rungInset),
+          cy + ny * (railOffset - rungInset),
+        ),
+        rung,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PrimaryBridgeOverlayPainter oldDelegate) =>
+      false;
 }
