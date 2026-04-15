@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -14,9 +15,7 @@ class CourseMapLesson {
   final String progressLabel;
   final String difficulty;
   final double progressValue;
-  final int steps;
   final List<Color> colors;
-  final int lane;
   final double xAlign;
   final double top;
   final CourseMapLessonState state;
@@ -31,9 +30,7 @@ class CourseMapLesson {
     required this.progressLabel,
     required this.difficulty,
     required this.progressValue,
-    required this.steps,
     required this.colors,
-    required this.lane,
     required this.xAlign,
     required this.top,
     required this.state,
@@ -67,11 +64,9 @@ const List<CourseMapLesson> courseMapLessons = [
     progressLabel: '起始课程',
     difficulty: '入门',
     progressValue: 1,
-    steps: 5,
-    colors: [Color(0xFFF9C8B2), Color(0xFFFFE7DA)],
-    lane: 0,
-    xAlign: 0.14,
-    top: 82,
+    colors: [Color(0xFFF7C7B6), Color(0xFFFFE8DB)],
+    xAlign: 0.16,
+    top: 148,
     state: CourseMapLessonState.completed,
   ),
   CourseMapLesson(
@@ -84,11 +79,9 @@ const List<CourseMapLesson> courseMapLessons = [
     progressLabel: '发音与节奏',
     difficulty: '入门',
     progressValue: 1,
-    steps: 6,
-    colors: [Color(0xFFF5D76C), Color(0xFFFFF0C9)],
-    lane: 1,
-    xAlign: 0.72,
-    top: 334,
+    colors: [Color(0xFFF5D770), Color(0xFFFFF2C9)],
+    xAlign: 0.70,
+    top: 358,
     state: CourseMapLessonState.completed,
   ),
   CourseMapLesson(
@@ -101,11 +94,9 @@ const List<CourseMapLesson> courseMapLessons = [
     progressLabel: '当前学习',
     difficulty: '基础',
     progressValue: 0.62,
-    steps: 4,
-    colors: [Color(0xFF8FD6C1), Color(0xFFD7F4E7)],
-    lane: 2,
-    xAlign: 0.43,
-    top: 678,
+    colors: [Color(0xFF8CD6C2), Color(0xFFD8F4E9)],
+    xAlign: 0.46,
+    top: 760,
     state: CourseMapLessonState.current,
   ),
   CourseMapLesson(
@@ -118,11 +109,9 @@ const List<CourseMapLesson> courseMapLessons = [
     progressLabel: '下一节',
     difficulty: '基础',
     progressValue: 0.12,
-    steps: 7,
     colors: [Color(0xFFD8CCF6), Color(0xFFF0E8FF)],
-    lane: 1,
     xAlign: 0.30,
-    top: 936,
+    top: 1030,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
@@ -135,11 +124,9 @@ const List<CourseMapLesson> courseMapLessons = [
     progressLabel: '即将解锁',
     difficulty: '进阶',
     progressValue: 0.05,
-    steps: 8,
     colors: [Color(0xFFF7C9CB), Color(0xFFFFE6E8)],
-    lane: 2,
-    xAlign: 0.72,
-    top: 1108,
+    xAlign: 0.73,
+    top: 1260,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
@@ -152,11 +139,9 @@ const List<CourseMapLesson> courseMapLessons = [
     progressLabel: '综合关卡',
     difficulty: '进阶',
     progressValue: 0,
-    steps: 10,
-    colors: [Color(0xFFCCC7E3), Color(0xFFEAE7F3)],
-    lane: 0,
-    xAlign: 0.18,
-    top: 1332,
+    colors: [Color(0xFFCCC7E3), Color(0xFFE9E5F1)],
+    xAlign: 0.16,
+    top: 1462,
     state: CourseMapLessonState.locked,
   ),
 ];
@@ -174,9 +159,28 @@ class MonumentCourseMapScreen extends StatefulWidget {
       _MonumentCourseMapScreenState();
 }
 
-class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
+class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
+    with SingleTickerProviderStateMixin {
   static const double _mapWidth = 760;
-  static const double _mapHeight = 1620;
+  static const double _mapHeight = 1670;
+
+  late final AnimationController _floatController;
+  int? _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,70 +192,100 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
       (lesson) => lesson.state == CourseMapLessonState.current,
       orElse: () => courseMapLessons.first,
     );
+    final selectedLesson =
+        _selectedIndex == null ? null : courseMapLessons[_selectedIndex!];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final mapScale = constraints.maxWidth / _mapWidth;
         final scaledMapHeight = _mapHeight * mapScale;
-        final topOverlayHeight = viewPadding.top + 160.0;
-        final bottomOverlayHeight = viewPadding.bottom + 110.0;
+        final headerInset = viewPadding.top + 156;
+        final navInset = viewPadding.bottom + 94;
+        final cardInset = navInset + (selectedLesson == null ? 12.0 : 154.0);
 
         return Stack(
           children: [
             const Positioned.fill(child: _CourseMapBackground()),
             Positioned.fill(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.only(
-                  top: topOverlayHeight,
-                  bottom: bottomOverlayHeight,
-                ),
-                child: SizedBox(
-                  width: constraints.maxWidth,
-                  height: scaledMapHeight,
-                  child: FittedBox(
-                    fit: BoxFit.fitWidth,
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: _mapWidth,
-                      height: _mapHeight,
-                      child: Stack(
-                        children: [
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _CourseMapScenePainter(courseMapLessons),
-                        ),
-                      ),
-                      const Positioned(
-                        left: 152,
-                        top: 138,
-                        child: _MainMonumentCluster(),
-                      ),
-                      const Positioned(
-                        left: 6,
-                        top: 96,
-                        child: _ReflectivePool(),
-                      ),
-                      const Positioned(
-                        left: 22,
-                        top: 832,
-                        child: _ReflectivePool(),
-                      ),
-                      const Positioned(
-                        right: 22,
-                        top: 96,
-                        child: _MiniTower(),
-                      ),
-                      for (final lesson in courseMapLessons)
-                        Positioned(
-                          left: (_mapWidth * lesson.xAlign) - 68,
-                          top: lesson.top,
-                          child: _CourseMapNode(
-                            lesson: lesson,
-                                onTap: () => _showLessonSheet(context, lesson),
-                              ),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (_selectedIndex != null &&
+                      (notification is ScrollStartNotification ||
+                          notification is ScrollUpdateNotification ||
+                          notification is UserScrollNotification)) {
+                    setState(() {
+                      _selectedIndex = null;
+                    });
+                  }
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.only(
+                    top: headerInset,
+                    bottom: cardInset,
+                  ),
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    height: scaledMapHeight,
+                    child: FittedBox(
+                      fit: BoxFit.fitWidth,
+                      alignment: Alignment.topCenter,
+                      child: AnimatedBuilder(
+                        animation: _floatController,
+                        builder: (context, child) {
+                          final drift =
+                              math.sin(_floatController.value * math.pi * 2) * 5;
+                          return SizedBox(
+                            width: _mapWidth,
+                            height: _mapHeight,
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: _CourseScenePainter(
+                                      lessons: courseMapLessons,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 146,
+                                  top: 184 + drift * 0.55,
+                                  child: const _CentralMonument(),
+                                ),
+                                Positioned(
+                                  left: 16,
+                                  top: 118 + drift * 0.20,
+                                  child: const _GlassAlcove(),
+                                ),
+                                Positioned(
+                                  right: 20,
+                                  top: 124 + drift * 0.25,
+                                  child: const _SideCapsuleCluster(),
+                                ),
+                                Positioned(
+                                  left: 42,
+                                  top: 1172 + drift * 0.12,
+                                  child: const _WaterPillar(),
+                                ),
+                                for (var i = 0; i < courseMapLessons.length; i++)
+                                  Positioned(
+                                    left: (_mapWidth * courseMapLessons[i].xAlign) - 68,
+                                    top: courseMapLessons[i].top,
+                                    child: _CourseMapNode(
+                                      lesson: courseMapLessons[i],
+                                      selected: _selectedIndex == i,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedIndex = i;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                              ],
                             ),
-                        ],
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -288,6 +322,67 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
             Positioned(
               left: 20,
               right: 20,
+              bottom: navInset,
+              child: ClipRect(
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeInOutCubicEmphasized,
+                  alignment: Alignment.bottomCenter,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 320),
+                    reverseDuration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      final slide = Tween<Offset>(
+                        begin: const Offset(0, 0.22),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                          reverseCurve: Curves.easeInCubic,
+                        ),
+                      );
+                      final scale = Tween<double>(
+                        begin: 0.96,
+                        end: 1,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                          reverseCurve: Curves.easeInCubic,
+                        ),
+                      );
+
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: slide,
+                          child: ScaleTransition(
+                            scale: scale,
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                    child: selectedLesson == null
+                        ? const SizedBox(
+                            key: ValueKey('collapsed-course-card'),
+                            height: 0,
+                          )
+                        : IgnorePointer(
+                            key: ValueKey(selectedLesson.title),
+                            ignoring: false,
+                            child: _CourseInfoCard(lesson: selectedLesson),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 20,
+              right: 20,
               bottom: viewPadding.bottom + 14,
               child: _CourseMapBottomNav(
                 currentIndex: 1,
@@ -297,18 +392,6 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
           ],
         );
       },
-    );
-  }
-
-  void _showLessonSheet(BuildContext context, CourseMapLesson lesson) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.12),
-      enableDrag: true,
-      isDismissible: true,
-      builder: (_) => _CourseDetailSheet(lesson: lesson),
     );
   }
 }
@@ -324,8 +407,8 @@ class _CourseMapBackground extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFE7DDFB),
-            Color(0xFFF0E8FF),
+            Color(0xFFE6DDFC),
+            Color(0xFFEFE8FF),
             Color(0xFFEAF4FF),
             Color(0xFFFFEEE7),
           ],
@@ -336,7 +419,7 @@ class _CourseMapBackground extends StatelessWidget {
         children: const [
           Positioned(
             top: -42,
-            right: -6,
+            right: -4,
             child: _BlurBlob(
               size: 184,
               colors: [Color(0xFFFFE7A6), Color(0xFFFFD696)],
@@ -353,8 +436,8 @@ class _CourseMapBackground extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 116,
-            right: -60,
+            bottom: 136,
+            right: -58,
             child: _BlurBlob(
               size: 236,
               colors: [Color(0xFFFFD9CF), Color(0xFFE5D7FF)],
@@ -480,557 +563,199 @@ class _CourseSummaryHeader extends StatelessWidget {
   }
 }
 
-class _CourseMapNode extends StatefulWidget {
-  final CourseMapLesson lesson;
-  final VoidCallback onTap;
-
-  const _CourseMapNode({
-    required this.lesson,
-    required this.onTap,
-  });
-
-  @override
-  State<_CourseMapNode> createState() => _CourseMapNodeState();
-}
-
-class _CourseMapNodeState extends State<_CourseMapNode>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
-    if (widget.lesson.current) {
-      _controller.repeat(reverse: true);
-    } else {
-      _controller.value = 0.5;
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _CourseMapNode oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.lesson.current && !_controller.isAnimating) {
-      _controller.repeat(reverse: true);
-    } else if (!widget.lesson.current && _controller.isAnimating) {
-      _controller
-        ..stop()
-        ..value = 0.5;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final lesson = widget.lesson;
-    final locked = lesson.locked;
-    final completed = lesson.state == CourseMapLessonState.completed;
-    final current = lesson.current;
-
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final glow = current ? 0.72 + (_controller.value * 0.28) : 0.38;
-        return GestureDetector(
-          onTap: widget.onTap,
-          child: SizedBox(
-            width: 154,
-            child: Column(
-              children: [
-                SizedBox(
-                  width: 154,
-                  height: 154,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.topCenter,
-                    children: [
-                      Positioned(
-                        bottom: 14,
-                        child: CustomPaint(
-                          size: const Size(136, 96),
-                          painter: _NodePedestalPainter(
-                            topColor: locked
-                                ? const Color(0xFFEAE5EF)
-                                : lesson.colors.last,
-                            frontColor: locked
-                                ? const Color(0xFFD8D3DE)
-                                : lesson.colors.first.withOpacity(0.86),
-                            sideColor: locked
-                                ? const Color(0xFFC3BCCB)
-                                : (lesson.lane == 1
-                                        ? const Color(0xFFF0C35F)
-                                        : lesson.lane == 2
-                                            ? const Color(0xFFD3BFE8)
-                                            : const Color(0xFFF09B84))
-                                    .withOpacity(0.78),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: current ? 10 : 6,
-                        child: _NodeTotem(
-                          lesson: lesson,
-                          glow: glow,
-                        ),
-                      ),
-                      if (completed)
-                        Positioned(
-                          right: 8,
-                          top: 20,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: const Color(0xFFFFE184).withOpacity(0.92),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFFE184).withOpacity(0.44),
-                                  blurRadius: 14,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              completed && lesson.title == '谢谢'
-                                  ? Icons.check_rounded
-                                  : Icons.auto_awesome_rounded,
-                              size: 19,
-                              color: const Color(0xFF6B5B37),
-                            ),
-                          ),
-                        ),
-                      if (current)
-                        Positioned(
-                          right: 10,
-                          bottom: 16,
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: const Color(0xFFFFC8AF).withOpacity(0.96),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFFC8AF).withOpacity(0.34),
-                                  blurRadius: 16,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow_rounded,
-                              size: 22,
-                              color: Color(0xFF7E5E57),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 110),
-                  padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: Colors.white.withOpacity(0.64),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.70),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    lesson.title,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: locked
-                          ? const Color(0xFF8B8795)
-                          : const Color(0xFF36405D),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _NodePedestalPainter extends CustomPainter {
-  final Color topColor;
-  final Color frontColor;
-  final Color sideColor;
-
-  const _NodePedestalPainter({
-    required this.topColor,
-    required this.frontColor,
-    required this.sideColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final skew = size.width * 0.18;
-    final topSlabHeight = size.height * 0.24;
-    final bodyTop = size.height * 0.30;
-    final slabGap = size.height * 0.06;
-    final slabTopFace = Path()
-      ..moveTo(skew, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width - skew, topSlabHeight)
-      ..lineTo(0, topSlabHeight)
-      ..close();
-    final slabFrontFace = Path()
-      ..moveTo(0, topSlabHeight)
-      ..lineTo(size.width - skew, topSlabHeight)
-      ..lineTo(size.width - skew, topSlabHeight + slabGap)
-      ..lineTo(0, topSlabHeight + slabGap)
-      ..close();
-    final topFace = Path()
-      ..moveTo(skew, bodyTop)
-      ..lineTo(size.width, bodyTop)
-      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
-      ..lineTo(0, bodyTop + size.height * 0.22)
-      ..close();
-    final frontFace = Path()
-      ..moveTo(0, bodyTop + size.height * 0.22)
-      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
-      ..lineTo(size.width - skew, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    final sideFace = Path()
-      ..moveTo(size.width, bodyTop)
-      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
-      ..lineTo(size.width - skew, size.height)
-      ..lineTo(size.width, size.height * 0.78)
-      ..close();
-
-    canvas.drawShadow(frontFace, const Color(0x162E3557), 12, false);
-    canvas.drawPath(slabTopFace, Paint()..color = Colors.white.withOpacity(0.92));
-    canvas.drawPath(
-      slabFrontFace,
-      Paint()..color = topColor.withOpacity(0.82),
-    );
-    canvas.drawPath(topFace, Paint()..color = topColor);
-    canvas.drawPath(frontFace, Paint()..color = frontColor);
-    canvas.drawPath(sideFace, Paint()..color = sideColor);
-  }
-
-  @override
-  bool shouldRepaint(covariant _NodePedestalPainter oldDelegate) =>
-      oldDelegate.topColor != topColor ||
-      oldDelegate.frontColor != frontColor ||
-      oldDelegate.sideColor != sideColor;
-}
-
-class _NodeTotem extends StatelessWidget {
-  final CourseMapLesson lesson;
-  final double glow;
-
-  const _NodeTotem({
-    required this.lesson,
-    required this.glow,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locked = lesson.locked;
-    if (lesson.current) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFFFF2D8), Color(0xFFF6C7A8)],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFFD7B6).withOpacity(0.50),
-                  blurRadius: 18,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            width: 40,
-            height: 86,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  lesson.colors.last.withOpacity(0.96),
-                  lesson.colors.first.withOpacity(0.96),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: lesson.colors.first.withOpacity(glow * 0.42),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Center(
-              child: Container(
-                width: 14,
-                height: 36,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: const Color(0xFF6C7B83).withOpacity(0.55),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Container(
-      width: 40,
-      height: 100,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: locked
-              ? const [Color(0xFFE7E1ED), Color(0xFFD8D2DE)]
-              : [
-                  lesson.colors.last.withOpacity(0.98),
-                  lesson.colors.first.withOpacity(0.98),
-                ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (locked ? const Color(0xFFC4BECD) : lesson.colors.first)
-                .withOpacity(glow * 0.42),
-            blurRadius: 18,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (!locked && lesson.title == '谢谢')
-            const Icon(
-              Icons.auto_awesome_rounded,
-              size: 22,
-              color: Color(0xFFF0C749),
-            ),
-          if (!locked && lesson.title == '谢谢') const SizedBox(height: 4),
-          Container(
-            width: 14,
-            height: 36,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: const Color(0xFF6C6876).withOpacity(0.48),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CourseDetailSheet extends StatelessWidget {
+class _CourseInfoCard extends StatelessWidget {
   final CourseMapLesson lesson;
 
-  const _CourseDetailSheet({
+  const _CourseInfoCard({
     required this.lesson,
   });
 
   @override
   Widget build(BuildContext context) {
-    final viewPadding = MediaQuery.viewPaddingOf(context);
     final buttonColors = lesson.locked
         ? const [Color(0xFFE0DCE8), Color(0xFFD1CBDC)]
         : lesson.colors;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(12, 0, 12, 12 + viewPadding.bottom),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.08),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
           child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            key: ValueKey(lesson.title),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.60),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: BorderRadius.circular(30),
               border: Border.all(
                 color: Colors.white.withOpacity(0.74),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF36415F).withOpacity(0.14),
-                  blurRadius: 30,
+                  color: const Color(0xFF36415F).withOpacity(0.12),
+                  blurRadius: 28,
                   offset: const Offset(0, 12),
                 ),
               ],
             ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 5,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
-                        color: const Color(0xFFB8BED2),
+                        shape: BoxShape.circle,
+                        color: lesson.locked
+                            ? const Color(0xFFD9D3E2)
+                            : lesson.colors.first.withOpacity(0.88),
+                      ),
+                      child: Icon(
+                        lesson.locked
+                            ? Icons.lock_outline_rounded
+                            : lesson.icon,
+                        size: 24,
+                        color: const Color(0xFF4B5574),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: lesson.locked
-                              ? const Color(0xFFD9D3E2)
-                              : lesson.colors.first.withOpacity(0.88),
-                        ),
-                        child: Icon(
-                          lesson.locked
-                              ? Icons.lock_outline_rounded
-                              : lesson.icon,
-                          size: 28,
-                          color: const Color(0xFF4B5574),
-                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${lesson.chapter} · ${lesson.subtitle}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6A7591),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            lesson.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF28324E),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${lesson.chapter} · ${lesson.subtitle}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6A7591),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              lesson.title,
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF28324E),
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    Text(
+                      lesson.stateLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: lesson.locked
+                            ? const Color(0xFF8B8795)
+                            : const Color(0xFF5C6783),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  lesson.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.55,
+                    color: Color(0xFF66708D),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _LessonMetric(
+                        label: '进度',
+                        value: lesson.progressLabel,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _LessonMetric(
+                        label: '难度',
+                        value: lesson.difficulty,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _LessonMetric(
+                        label: '时长',
+                        value: lesson.duration,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: buttonColors,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: buttonColors.first.withOpacity(0.24),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    lesson.description,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.7,
-                      color: Color(0xFF66708D),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _LessonMetric(
-                          label: '进度',
-                          value: lesson.progressLabel,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _LessonMetric(
-                          label: '难度',
-                          value: lesson.difficulty,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _LessonMetric(
-                          label: '时长',
-                          value: lesson.duration,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    height: 56,
-                    decoration: BoxDecoration(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(22),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: buttonColors,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: buttonColors.first.withOpacity(0.28),
-                          blurRadius: 22,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(22),
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Center(
-                          child: Text(
-                            lesson.locked ? '完成前置课程后解锁' : '开始学习',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: lesson.locked
-                                  ? const Color(0xFF847F8F)
-                                  : const Color(0xFF2E3557),
-                            ),
+                      onTap: () {},
+                      child: Center(
+                        child: Text(
+                          lesson.locked
+                              ? '完成前置课程后解锁'
+                              : lesson.state == CourseMapLessonState.completed
+                                  ? '再次学习'
+                                  : '开始学习',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: lesson.locked
+                                ? const Color(0xFF847F8F)
+                                : const Color(0xFF2E3557),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1113,11 +838,7 @@ class _GlassPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 16,
-                color: const Color(0xFF4D5776),
-              ),
+              Icon(icon, size: 16, color: const Color(0xFF4D5776)),
               const SizedBox(width: 8),
               Text(
                 text,
@@ -1226,101 +947,463 @@ class _CourseMapBottomNav extends StatelessWidget {
   }
 }
 
-class _MainMonumentCluster extends StatelessWidget {
-  const _MainMonumentCluster();
+class _CourseMapNode extends StatefulWidget {
+  final CourseMapLesson lesson;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CourseMapNode({
+    required this.lesson,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  State<_CourseMapNode> createState() => _CourseMapNodeState();
+}
+
+class _CourseMapNodeState extends State<_CourseMapNode>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    if (widget.lesson.current) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.value = 0.5;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _CourseMapNode oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.lesson.current && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.lesson.current && _controller.isAnimating) {
+      _controller
+        ..stop()
+        ..value = 0.5;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lesson = widget.lesson;
+    final selected = widget.selected;
+    final locked = lesson.locked;
+    final completed = lesson.state == CourseMapLessonState.completed;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final breath = lesson.current ? 0.72 + (_controller.value * 0.28) : 0.40;
+        return AnimatedScale(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          scale: selected ? 1.05 : 1,
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: SizedBox(
+              width: 154,
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: 154,
+                    height: 156,
+                    child: Stack(
+                      alignment: Alignment.topCenter,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          bottom: 12,
+                          child: CustomPaint(
+                            size: const Size(136, 94),
+                            painter: _NodePedestalPainter(
+                              topColor: locked
+                                  ? const Color(0xFFE9E4EF)
+                                  : lesson.colors.last,
+                              frontColor: locked
+                                  ? const Color(0xFFD6D0DD)
+                                  : lesson.colors.first.withOpacity(
+                                      selected ? 0.94 : 0.84,
+                                    ),
+                              sideColor: locked
+                                  ? const Color(0xFFC0BAC8)
+                                  : _nodeSideColor(lesson).withOpacity(
+                                      selected ? 0.92 : 0.76,
+                                    ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: lesson.current ? 8 : 4,
+                          child: _NodeTotem(
+                            lesson: lesson,
+                            glow: breath + (selected ? 0.18 : 0),
+                          ),
+                        ),
+                        if (selected)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: lesson.colors.first.withOpacity(0.18),
+                                      blurRadius: 26,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (completed)
+                          Positioned(
+                            right: 8,
+                            top: 18,
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFFFFE184).withOpacity(0.94),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        const Color(0xFFFFE184).withOpacity(0.44),
+                                    blurRadius: 14,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.check_rounded,
+                                size: 18,
+                                color: Color(0xFF6B5B37),
+                              ),
+                            ),
+                          ),
+                        if (lesson.current)
+                          Positioned(
+                            right: 8,
+                            bottom: 18,
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: const Color(0xFFFFC8AF).withOpacity(0.98),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        const Color(0xFFFFC8AF).withOpacity(0.34),
+                                    blurRadius: 16,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                size: 22,
+                                color: Color(0xFF7E5E57),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    constraints: const BoxConstraints(maxWidth: 112),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: selected
+                          ? Colors.white.withOpacity(0.80)
+                          : Colors.white.withOpacity(0.66),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(selected ? 0.86 : 0.72),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      lesson.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: locked
+                            ? const Color(0xFF8B8795)
+                            : const Color(0xFF36405D),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _nodeSideColor(CourseMapLesson lesson) {
+    if (lesson.title == '谢谢') return const Color(0xFFE9C852);
+    if (lesson.title == '我') return const Color(0xFF83D2C7);
+    if (lesson.title == '你还好吗') return const Color(0xFFD88B8C);
+    return const Color(0xFFF09B84);
+  }
+}
+
+class _NodeTotem extends StatelessWidget {
+  final CourseMapLesson lesson;
+  final double glow;
+
+  const _NodeTotem({
+    required this.lesson,
+    required this.glow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = lesson.locked;
+
+    if (lesson.current) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFFF2D8), Color(0xFFF6C7A8)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD7B6).withOpacity(0.52),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 42,
+            height: 88,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  lesson.colors.last.withOpacity(0.98),
+                  lesson.colors.first.withOpacity(0.98),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: lesson.colors.first.withOpacity(glow * 0.42),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Container(
+                width: 14,
+                height: 36,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF6C7B83).withOpacity(0.55),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Container(
+      width: 40,
+      height: 100,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: locked
+              ? const [Color(0xFFE7E1ED), Color(0xFFD8D2DE)]
+              : [
+                  lesson.colors.last.withOpacity(0.98),
+                  lesson.colors.first.withOpacity(0.98),
+                ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (locked ? const Color(0xFFC4BECD) : lesson.colors.first)
+                .withOpacity(glow * 0.42),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!locked && lesson.title == '谢谢')
+            const Icon(
+              Icons.auto_awesome_rounded,
+              size: 20,
+              color: Color(0xFFF0C749),
+            ),
+          if (!locked && lesson.title == '谢谢') const SizedBox(height: 4),
+          Container(
+            width: 14,
+            height: 36,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF6C6876).withOpacity(0.48),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CentralMonument extends StatelessWidget {
+  const _CentralMonument();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 430,
-      height: 760,
+      width: 438,
+      height: 756,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
-            left: 116,
-            top: 32,
+            left: 112,
+            top: 28,
             child: Container(
-              width: 176,
-              height: 520,
+              width: 194,
+              height: 522,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(72),
+                borderRadius: BorderRadius.circular(70),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFFF4C7B7).withOpacity(0.78),
-                    const Color(0xFFDCC3DA).withOpacity(0.74),
-                    const Color(0xFFC7C5EE).withOpacity(0.68),
+                    const Color(0xFFF5C8B6).withOpacity(0.42),
+                    const Color(0xFFDCC4DA).withOpacity(0.34),
+                    const Color(0xFFC8C6F0).withOpacity(0.32),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 126,
+            top: 160,
+            child: Container(
+              width: 166,
+              height: 236,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(44),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.94),
+                    const Color(0xFFFFF1D2).withOpacity(0.86),
+                    const Color(0xFFF2D8BA).withOpacity(0.72),
                   ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFB391C3).withOpacity(0.18),
+                    color: const Color(0xFFFFE7A0).withOpacity(0.28),
                     blurRadius: 30,
-                    offset: const Offset(0, 18),
+                    spreadRadius: 3,
                   ),
                 ],
               ),
               child: Stack(
                 children: [
-                  Positioned(
-                    top: 96,
-                    left: 0,
-                    right: 0,
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(44),
+                        gradient: RadialGradient(
+                          center: const Alignment(0, -0.2),
+                          radius: 0.9,
+                          colors: [
+                            Colors.white.withOpacity(0.24),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Center(
                     child: Text(
                       'SILENT\nVOICE',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        height: 1.0,
-                        fontSize: 30,
+                        height: 1.02,
+                        fontSize: 25,
                         fontWeight: FontWeight.w400,
-                        letterSpacing: 1.2,
-                        color: Colors.white.withOpacity(0.86),
+                        letterSpacing: 1.4,
+                        color: Colors.white.withOpacity(0.92),
                       ),
                     ),
                   ),
                   Positioned(
-                    left: 38,
-                    right: 38,
-                    bottom: 78,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    left: 0,
+                    right: 0,
+                    top: -36,
+                    child: Column(
                       children: [
-                        Container(
-                          width: 20,
-                          height: 164,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.42),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 46,
+                          color: Color(0xFFF7D54C),
                         ),
                         Container(
-                          width: 20,
-                          height: 164,
+                          width: 26,
+                          height: 50,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.42),
                             borderRadius: BorderRadius.circular(18),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFFFF4CB), Color(0xFFF5D870)],
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 53,
-                    right: 53,
-                    bottom: 34,
-                    child: Container(
-                      height: 112,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.40),
-                          width: 14,
-                        ),
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(54),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -1328,42 +1411,141 @@ class _MainMonumentCluster extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 314,
-            top: 112,
+            left: 40,
+            top: 224,
             child: Container(
-              width: 34,
-              height: 242,
+              width: 30,
+              height: 274,
               decoration: BoxDecoration(
-                color: const Color(0xFFA8A6E4).withOpacity(0.58),
+                color: const Color(0xFFE79296).withOpacity(0.72),
                 borderRadius: BorderRadius.circular(22),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 44,
+            top: 236,
+            child: Container(
+              width: 30,
+              height: 254,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE4A49B).withOpacity(0.72),
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 72,
+            right: 74,
+            bottom: 164,
+            child: Container(
+              height: 72,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF7E3D3), Color(0xFFEFD1C2)],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 156,
+            right: 156,
+            bottom: 214,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _archPillar(),
+                _archPillar(),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 144,
+            right: 144,
+            bottom: 104,
+            child: Container(
+              height: 118,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.34),
+                  width: 12,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(56),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _archPillar() {
+    return Container(
+      width: 18,
+      height: 132,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.28),
+        borderRadius: BorderRadius.circular(18),
+      ),
+    );
+  }
+}
+
+class _GlassAlcove extends StatelessWidget {
+  const _GlassAlcove();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 170,
+      height: 320,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 8,
+            top: 68,
+            child: Container(
+              width: 130,
+              height: 220,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(38),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.28),
+                  width: 4,
+                ),
+                color: Colors.white.withOpacity(0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 14,
+            top: 0,
+            child: SizedBox(
+              width: 122,
+              height: 104,
+              child: CustomPaint(
+                painter: _NodePedestalPainter(
+                  topColor: const Color(0xFFFCE5D8),
+                  frontColor: const Color(0xFFF5D2C4),
+                  sideColor: const Color(0xFFF09B84),
+                ),
               ),
             ),
           ),
           Positioned(
             left: 74,
-            top: 514,
-            child: Container(
-              width: 180,
-              height: 64,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFF9E3D1), Color(0xFFEFD8C8)],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 176,
-            bottom: 148,
+            top: 10,
             child: Container(
               width: 24,
-              height: 24,
+              height: 40,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF8D8EAF).withOpacity(0.64),
+                borderRadius: BorderRadius.circular(18),
+                color: const Color(0xFFF09B84),
               ),
             ),
           ),
@@ -1373,168 +1555,75 @@ class _MainMonumentCluster extends StatelessWidget {
   }
 }
 
-class _IsoTower extends StatelessWidget {
-  final double width;
-  final double height;
-  final Color topColor;
-  final Color frontColor;
-  final Color sideColor;
-  final String? title;
-
-  const _IsoTower({
-    required this.width,
-    required this.height,
-    required this.topColor,
-    required this.frontColor,
-    required this.sideColor,
-    this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final skew = width * 0.22;
-    return SizedBox(
-      width: width + skew,
-      height: height,
-      child: Stack(
-        children: [
-          Positioned(
-            left: skew,
-            child: Container(
-              width: width,
-              height: height,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [frontColor.withOpacity(0.94), frontColor],
-                ),
-              ),
-              child: title == null
-                  ? null
-                  : Padding(
-                      padding: EdgeInsets.only(top: height * 0.18),
-                      child: Text(
-                        title!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          height: 1.1,
-                          fontSize: width * 0.16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.3,
-                          color: Colors.white.withOpacity(0.90),
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            top: height * 0.08,
-            bottom: 0,
-            child: ClipPath(
-              clipper: _LeftFaceClipper(skew),
-              child: Container(
-                width: skew + 24,
-                height: height,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  color: sideColor,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: skew - 10,
-            right: 0,
-            top: 0,
-            child: ClipPath(
-              clipper: _TopFaceClipper(),
-              child: Container(
-                height: height * 0.14,
-                decoration: BoxDecoration(
-                  color: topColor,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniTower extends StatelessWidget {
-  const _MiniTower();
+class _SideCapsuleCluster extends StatelessWidget {
+  const _SideCapsuleCluster();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 144,
-      height: 350,
+      width: 160,
+      height: 354,
       child: Stack(
         children: [
           Positioned(
-            right: 12,
+            right: 18,
             top: 0,
             child: Container(
-              width: 78,
-              height: 228,
+              width: 82,
+              height: 236,
               decoration: BoxDecoration(
-                color: const Color(0xFF9CD8EA).withOpacity(0.58),
-                borderRadius: BorderRadius.circular(40),
+                color: const Color(0xFF9BD7EA).withOpacity(0.54),
+                borderRadius: BorderRadius.circular(44),
               ),
             ),
           ),
           Positioned(
-            right: 36,
+            right: 40,
             top: 18,
             child: Container(
-              width: 54,
+              width: 56,
               height: 24,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(18),
                 color: const Color(0xFF6EA7BA).withOpacity(0.92),
               ),
             ),
           ),
           Positioned(
             right: 64,
-            top: 94,
+            top: 98,
             child: Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF7AD4D3).withOpacity(0.54),
+                color: const Color(0xFF79D4D2).withOpacity(0.54),
               ),
             ),
           ),
           Positioned(
-            right: 64,
-            top: 142,
+            right: 68,
+            top: 146,
             child: Container(
               width: 36,
-              height: 118,
+              height: 122,
               decoration: BoxDecoration(
-                color: const Color(0xFFDE9B92).withOpacity(0.58),
+                color: const Color(0xFFE09C92).withOpacity(0.58),
                 borderRadius: BorderRadius.circular(22),
               ),
             ),
           ),
           Positioned(
             right: 0,
-            top: 208,
+            top: 226,
             child: SizedBox(
-              width: 86,
-              height: 56,
+              width: 116,
+              height: 78,
               child: CustomPaint(
                 painter: _NodePedestalPainter(
-                  topColor: const Color(0xFFFCE6D8),
-                  frontColor: const Color(0xFFF4C8BF),
-                  sideColor: const Color(0xFFD37D79),
+                  topColor: const Color(0xFFFCE4D8),
+                  frontColor: const Color(0xFFF1D1C7),
+                  sideColor: const Color(0xFFD78882),
                 ),
               ),
             ),
@@ -1545,50 +1634,44 @@ class _MiniTower extends StatelessWidget {
   }
 }
 
-class _ReflectivePool extends StatelessWidget {
-  const _ReflectivePool();
+class _WaterPillar extends StatelessWidget {
+  const _WaterPillar();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 160,
-      height: 280,
+      width: 120,
+      height: 170,
       child: Stack(
         children: [
           Positioned(
-            left: 8,
-            top: 34,
+            left: 16,
+            top: 24,
             child: Container(
-              width: 126,
-              height: 210,
+              width: 48,
+              height: 118,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(34),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.34),
-                  width: 4,
+                borderRadius: BorderRadius.circular(26),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF8EDFF0).withOpacity(0.92),
+                    const Color(0xFF86BFFF).withOpacity(0.82),
+                  ],
                 ),
-                color: Colors.white.withOpacity(0.08),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.16),
-                    blurRadius: 12,
-                  ),
-                ],
               ),
             ),
           ),
           Positioned(
-            left: 16,
+            left: 26,
             top: 0,
-            child: SizedBox(
-              width: 112,
-              height: 96,
-              child: CustomPaint(
-                painter: _NodePedestalPainter(
-                  topColor: const Color(0xFFFDE5D8),
-                  frontColor: const Color(0xFFF6D5C7),
-                  sideColor: const Color(0xFFF1997F),
-                ),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.62),
               ),
             ),
           ),
@@ -1598,261 +1681,202 @@ class _ReflectivePool extends StatelessWidget {
   }
 }
 
-class _LeftFaceClipper extends CustomClipper<Path> {
-  final double skew;
+class _NodePedestalPainter extends CustomPainter {
+  final Color topColor;
+  final Color frontColor;
+  final Color sideColor;
 
-  const _LeftFaceClipper(this.skew);
+  const _NodePedestalPainter({
+    required this.topColor,
+    required this.frontColor,
+    required this.sideColor,
+  });
 
   @override
-  Path getClip(Size size) {
-    return Path()
+  void paint(Canvas canvas, Size size) {
+    final skew = size.width * 0.18;
+    final topSlabHeight = size.height * 0.24;
+    final bodyTop = size.height * 0.30;
+    final slabGap = size.height * 0.06;
+
+    final slabTopFace = Path()
       ..moveTo(skew, 0)
       ..lineTo(size.width, 0)
+      ..lineTo(size.width - skew, topSlabHeight)
+      ..lineTo(0, topSlabHeight)
+      ..close();
+    final slabFrontFace = Path()
+      ..moveTo(0, topSlabHeight)
+      ..lineTo(size.width - skew, topSlabHeight)
+      ..lineTo(size.width - skew, topSlabHeight + slabGap)
+      ..lineTo(0, topSlabHeight + slabGap)
+      ..close();
+    final topFace = Path()
+      ..moveTo(skew, bodyTop)
+      ..lineTo(size.width, bodyTop)
+      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
+      ..lineTo(0, bodyTop + size.height * 0.22)
+      ..close();
+    final frontFace = Path()
+      ..moveTo(0, bodyTop + size.height * 0.22)
+      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
       ..lineTo(size.width - skew, size.height)
       ..lineTo(0, size.height)
       ..close();
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-class _TopFaceClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    return Path()
-      ..moveTo(0, size.height)
-      ..lineTo(size.width * 0.18, 0)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width * 0.82, size.height)
+    final sideFace = Path()
+      ..moveTo(size.width, bodyTop)
+      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
+      ..lineTo(size.width - skew, size.height)
+      ..lineTo(size.width, size.height * 0.78)
       ..close();
-  }
 
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-class _ArchPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFF0C9BF)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 14
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path()
-      ..moveTo(size.width * 0.22, size.height)
-      ..quadraticBezierTo(
-        size.width * 0.20,
-        size.height * 0.44,
-        size.width * 0.50,
-        size.height * 0.28,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.80,
-        size.height * 0.44,
-        size.width * 0.78,
-        size.height,
-      );
-    canvas.drawPath(path, paint);
-
-    canvas.drawLine(
-      Offset(size.width * 0.50, size.height * 0.28),
-      Offset(size.width * 0.50, size.height),
-      Paint()
-        ..color = const Color(0xFFF0C9BF)
-        ..strokeWidth = 12
-        ..strokeCap = StrokeCap.round,
+    canvas.drawShadow(frontFace, const Color(0x162E3557), 12, false);
+    canvas.drawPath(slabTopFace, Paint()..color = Colors.white.withOpacity(0.94));
+    canvas.drawPath(
+      slabFrontFace,
+      Paint()..color = topColor.withOpacity(0.84),
     );
+    canvas.drawPath(topFace, Paint()..color = topColor);
+    canvas.drawPath(frontFace, Paint()..color = frontColor);
+    canvas.drawPath(sideFace, Paint()..color = sideColor);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _NodePedestalPainter oldDelegate) {
+    return oldDelegate.topColor != topColor ||
+        oldDelegate.frontColor != frontColor ||
+        oldDelegate.sideColor != sideColor;
+  }
 }
 
-class _CourseMapScenePainter extends CustomPainter {
+class _CourseScenePainter extends CustomPainter {
   final List<CourseMapLesson> lessons;
 
-  const _CourseMapScenePainter(this.lessons);
+  const _CourseScenePainter({
+    required this.lessons,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final sunPaint = Paint()
-      ..shader = const RadialGradient(
-        colors: [Color(0x55FFEAA3), Color(0x00FFEAA3)],
-      ).createShader(
-        Rect.fromCircle(center: const Offset(630, 94), radius: 126),
-      );
-    canvas.drawCircle(const Offset(630, 94), 126, sunPaint);
+    _drawSunGlow(canvas);
+    _drawMist(canvas);
+    _drawParticles(canvas);
 
-    final mistPaint = Paint()..color = Colors.white.withOpacity(0.16);
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: const Offset(244, 188),
-        width: 330,
-        height: 116,
-      ),
-      mistPaint,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: const Offset(314, 1038),
-        width: 420,
-        height: 128,
-      ),
-      mistPaint,
-    );
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(574, 84, 90, 326),
-        const Radius.circular(44),
-      ),
-      Paint()..color = const Color(0x4C9FD8EA),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(612, 98, 50, 24),
-        const Radius.circular(18),
-      ),
-      Paint()..color = const Color(0xCC6EA7BA),
-    );
-    canvas.drawCircle(
-      const Offset(620, 190),
-      24,
-      Paint()..color = const Color(0x5A7AD4D3),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(604, 212, 34, 138),
-        const Radius.circular(22),
-      ),
-      Paint()..color = const Color(0x66DE9B92),
-    );
-
-    final lessonPoints = lessons
-        .map((lesson) => Offset((size.width * lesson.xAlign) + 8, lesson.top + 88))
+    final anchors = lessons
+        .map((lesson) => Offset(size.width * lesson.xAlign, lesson.top + 84))
         .toList();
 
-    _drawBridge(canvas, lessonPoints[0], lessonPoints[1], beamColor: const Color(0x55F6E1AF));
-    _drawLadder(canvas, const Offset(208, 256), const Offset(514, 430));
-    _drawBridge(canvas, lessonPoints[1], lessonPoints[2], beamColor: const Color(0x40D8C5F2));
-    _drawStairRibbon(canvas, const Offset(524, 508), const Offset(364, 728));
-    _drawBridge(canvas, lessonPoints[2], lessonPoints[3], beamColor: const Color(0x40C8D7FF));
-    _drawBridge(canvas, lessonPoints[2], lessonPoints[4], beamColor: const Color(0x34FFD7CE));
-    _drawBridge(canvas, lessonPoints[3], lessonPoints[5], beamColor: const Color(0x30E2D8FF));
+    _drawRope(canvas, anchors[0], anchors[1]);
+    _drawRope(canvas, anchors[1], anchors[2]);
+    _drawRope(canvas, anchors[2], anchors[3]);
+    _drawRope(canvas, anchors[2], anchors[4]);
+    _drawRope(canvas, anchors[3], anchors[5]);
+
+    _drawLadder(canvas, const Offset(220, 272), const Offset(502, 436));
+    _drawStairRibbon(canvas, const Offset(510, 512), const Offset(360, 794));
+    _drawStairRibbon(canvas, const Offset(334, 1112), const Offset(258, 1458));
 
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(36, 132, 176, 84),
+      rect: const Rect.fromLTWH(42, 152, 176, 82),
       top: const Color(0xFFF8E7DA),
       front: const Color(0xFFF4CFBC),
       side: const Color(0xFFF09479),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(448, 462, 168, 88),
+      rect: const Rect.fromLTWH(454, 392, 168, 88),
       top: const Color(0xFFFFF4D3),
       front: const Color(0xFFF4DF8E),
       side: const Color(0xFFECCB50),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(238, 726, 176, 96),
-      top: const Color(0xFFF8EAD7),
+      rect: const Rect.fromLTWH(256, 786, 176, 92),
+      top: const Color(0xFFF8E9D7),
       front: const Color(0xFFE0D5F2),
       side: const Color(0xFFBCAFE0),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(122, 978, 168, 92),
+      rect: const Rect.fromLTWH(128, 1058, 166, 88),
       top: const Color(0xFFF7E8D8),
       front: const Color(0xFFD8D0EE),
       side: const Color(0xFFBAB2DB),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(486, 1168, 162, 92),
+      rect: const Rect.fromLTWH(490, 1288, 166, 88),
       top: const Color(0xFFF9E8D8),
       front: const Color(0xFFF0D2CF),
       side: const Color(0xFFD78882),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(42, 1368, 174, 96),
-      top: const Color(0xFFF5E7D8),
-      front: const Color(0xFFD8D1E8),
-      side: const Color(0xFFBEB6D7),
+      rect: const Rect.fromLTWH(36, 1494, 182, 96),
+      top: const Color(0xFFF0ECE5),
+      front: const Color(0xFF9C9792),
+      side: const Color(0xFF72706E),
     );
 
     final sparklePaint = Paint()
-      ..color = Colors.white.withOpacity(0.52)
+      ..color = Colors.white.withOpacity(0.58)
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
-    _drawSparkle(canvas, const Offset(676, 276), sparklePaint);
-    _drawSparkle(canvas, const Offset(114, 692), sparklePaint);
-    _drawSparkle(canvas, const Offset(564, 1008), sparklePaint);
+    _drawSparkle(canvas, const Offset(628, 310), sparklePaint);
+    _drawSparkle(canvas, const Offset(112, 684), sparklePaint);
+    _drawSparkle(canvas, const Offset(632, 1432), sparklePaint);
   }
 
-  void _drawBridge(Canvas canvas, Offset start, Offset end, {required Color beamColor}) {
-    final beam = Paint()
-      ..color = beamColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 28
-      ..strokeCap = StrokeCap.round;
-    final line = Paint()
-      ..color = const Color(0xFFF1E6CC)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, beam);
-    canvas.drawLine(start, end, line);
-  }
-
-  void _drawLadder(Canvas canvas, Offset start, Offset end) {
-    final rail = Paint()
-      ..color = const Color(0xFFECDCB1)
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, rail);
-    final dx = end.dx - start.dx;
-    final dy = end.dy - start.dy;
-    for (var i = 0; i < 6; i++) {
-      final t = i / 5;
-      final px = start.dx + (dx * t);
-      final py = start.dy + (dy * t);
-      canvas.drawLine(
-        Offset(px - 12, py - 8),
-        Offset(px + 2, py + 8),
-        Paint()
-          ..color = const Color(0xFFF5EED8)
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
+  void _drawSunGlow(Canvas canvas) {
+    final sunPaint = Paint()
+      ..shader = const RadialGradient(
+        colors: [Color(0x52FFE7A0), Color(0x00FFE7A0)],
+      ).createShader(
+        Rect.fromCircle(center: const Offset(624, 124), radius: 132),
       );
-    }
+    canvas.drawCircle(const Offset(624, 124), 132, sunPaint);
   }
 
-  void _drawStairRibbon(Canvas canvas, Offset start, Offset end) {
-    final beam = Paint()
-      ..color = const Color(0x40D7C8F0)
-      ..strokeWidth = 24
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(start, end, beam);
-    final dx = end.dx - start.dx;
-    final dy = end.dy - start.dy;
-    for (var i = 0; i < 11; i++) {
-      final t = i / 10;
-      final px = start.dx + (dx * t);
-      final py = start.dy + (dy * t);
-      canvas.drawLine(
-        Offset(px - 16, py + 6),
-        Offset(px + 12, py - 6),
-        Paint()
-          ..color = const Color(0xFFF0E6C9)
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
+  void _drawMist(Canvas canvas) {
+    final mist = Paint()..color = Colors.white.withOpacity(0.14);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: const Offset(290, 346),
+        width: 420,
+        height: 116,
+      ),
+      mist,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: const Offset(510, 922),
+        width: 420,
+        height: 124,
+      ),
+      mist,
+    );
+  }
+
+  void _drawParticles(Canvas canvas) {
+    final dot = Paint()..color = Colors.white.withOpacity(0.55);
+    const points = [
+      Offset(142, 214),
+      Offset(208, 246),
+      Offset(336, 182),
+      Offset(498, 226),
+      Offset(638, 328),
+      Offset(104, 578),
+      Offset(286, 620),
+      Offset(620, 730),
+      Offset(184, 874),
+      Offset(538, 956),
+      Offset(650, 1146),
+      Offset(216, 1322),
+      Offset(360, 1460),
+    ];
+    for (final point in points) {
+      canvas.drawCircle(point, 1.6, dot);
     }
   }
 
@@ -1863,46 +1887,111 @@ class _CourseMapScenePainter extends CustomPainter {
     required Color front,
     required Color side,
   }) {
-    const skew = 28.0;
+    const skew = 26.0;
     final topFace = Path()
       ..moveTo(rect.left + skew, rect.top)
       ..lineTo(rect.right, rect.top)
-      ..lineTo(rect.right - skew, rect.top + rect.height * 0.26)
-      ..lineTo(rect.left, rect.top + rect.height * 0.26)
+      ..lineTo(rect.right - skew, rect.top + rect.height * 0.24)
+      ..lineTo(rect.left, rect.top + rect.height * 0.24)
       ..close();
     final frontFace = Path()
-      ..moveTo(rect.left, rect.top + rect.height * 0.26)
-      ..lineTo(rect.right - skew, rect.top + rect.height * 0.26)
+      ..moveTo(rect.left, rect.top + rect.height * 0.24)
+      ..lineTo(rect.right - skew, rect.top + rect.height * 0.24)
       ..lineTo(rect.right - skew, rect.bottom)
       ..lineTo(rect.left, rect.bottom)
       ..close();
     final sideFace = Path()
       ..moveTo(rect.right, rect.top)
-      ..lineTo(rect.right - skew, rect.top + rect.height * 0.26)
+      ..lineTo(rect.right - skew, rect.top + rect.height * 0.24)
       ..lineTo(rect.right - skew, rect.bottom)
-      ..lineTo(rect.right, rect.bottom - rect.height * 0.26)
+      ..lineTo(rect.right, rect.bottom - rect.height * 0.24)
       ..close();
 
-    canvas.drawShadow(frontFace, const Color(0x182E3557), 14, false);
+    canvas.drawShadow(frontFace, const Color(0x152E3557), 12, false);
     canvas.drawPath(topFace, Paint()..color = top);
     canvas.drawPath(frontFace, Paint()..color = front);
     canvas.drawPath(sideFace, Paint()..color = side);
   }
 
-  void _drawStairs(Canvas canvas, Offset start,
-      {required double length, required int tilt}) {
-    final stairPaint = Paint()
-      ..color = const Color(0xFFF7ECDD)
-      ..strokeWidth = 2
+  void _drawRope(Canvas canvas, Offset start, Offset end) {
+    final shadow = Paint()
+      ..color = const Color(0x243A3560)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 18
       ..strokeCap = StrokeCap.round;
+    final base = Paint()
+      ..color = const Color(0xFFE6D5B4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..strokeCap = StrokeCap.round;
+    final highlight = Paint()
+      ..color = const Color(0xFFF8EFDA)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, shadow);
+    canvas.drawLine(start, end, base);
+    canvas.drawLine(start, end, highlight);
 
-    for (var index = 0; index < 9; index++) {
-      final dx = index * (tilt * 5.0);
-      final dy = index * 6.0;
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    for (var i = 1; i < 8; i++) {
+      final t = i / 8;
+      final px = start.dx + dx * t;
+      final py = start.dy + dy * t;
       canvas.drawLine(
-        Offset(start.dx + dx, start.dy + dy),
-        Offset(start.dx + dx + length * 0.18, start.dy + dy),
-        stairPaint,
+        Offset(px - 8, py - 8),
+        Offset(px + 6, py + 6),
+        Paint()
+          ..color = const Color(0xFFDDCCA8)
+          ..strokeWidth = 2.4
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  void _drawLadder(Canvas canvas, Offset start, Offset end) {
+    final rail = Paint()
+      ..color = const Color(0xFFF0E2BF)
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, rail);
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    for (var i = 0; i < 6; i++) {
+      final t = i / 5;
+      final px = start.dx + dx * t;
+      final py = start.dy + dy * t;
+      canvas.drawLine(
+        Offset(px - 12, py - 8),
+        Offset(px + 2, py + 8),
+        Paint()
+          ..color = const Color(0xFFF7EED8)
+          ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  void _drawStairRibbon(Canvas canvas, Offset start, Offset end) {
+    final beam = Paint()
+      ..color = const Color(0x38D7C8F0)
+      ..strokeWidth = 24
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, beam);
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    for (var i = 0; i < 11; i++) {
+      final t = i / 10;
+      final px = start.dx + dx * t;
+      final py = start.dy + dy * t;
+      canvas.drawLine(
+        Offset(px - 16, py + 6),
+        Offset(px + 12, py - 6),
+        Paint()
+          ..color = const Color(0xFFF0E6C9)
+          ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round,
       );
     }
   }
@@ -1921,5 +2010,5 @@ class _CourseMapScenePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CourseMapScenePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CourseScenePainter oldDelegate) => false;
 }
