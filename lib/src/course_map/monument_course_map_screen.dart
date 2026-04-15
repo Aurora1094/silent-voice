@@ -206,62 +206,64 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (!_matrixReady && constraints.maxWidth > 0 && constraints.maxHeight > 0) {
-          final scale = constraints.maxWidth < 390 ? 0.84 : 0.92;
-          final tx = (constraints.maxWidth - (_mapWidth * scale)) / 2;
-          final ty = viewPadding.top + 24;
-          _transformationController.value = Matrix4.identity()
-            ..translate(tx, ty)
-            ..scale(scale);
-          _matrixReady = true;
-        }
+        final mapScale = constraints.maxWidth / _mapWidth;
+        final scaledMapHeight = _mapHeight * mapScale;
+        final topOverlayHeight = viewPadding.top + 172.0;
+        final bottomOverlayHeight = viewPadding.bottom + 110.0;
 
         return Stack(
           children: [
             const Positioned.fill(child: _CourseMapBackground()),
             Positioned.fill(
-              child: InteractiveViewer(
-                transformationController: _transformationController,
-                minScale: 0.74,
-                maxScale: 2.2,
-                constrained: false,
-                clipBehavior: Clip.none,
-                boundaryMargin: const EdgeInsets.all(260),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: topOverlayHeight,
+                  bottom: bottomOverlayHeight,
+                ),
                 child: SizedBox(
-                  width: _mapWidth,
-                  height: _mapHeight,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _CourseMapScenePainter(courseMapLessons),
-                        ),
-                      ),
-                      const Positioned(
-                        left: 286,
-                        top: 176,
-                        child: _MainMonumentCluster(),
-                      ),
-                      const Positioned(
-                        left: 86,
-                        top: 902,
-                        child: _ReflectivePool(),
-                      ),
-                      const Positioned(
-                        right: 96,
-                        top: 336,
-                        child: _MiniTower(),
-                      ),
-                      for (final lesson in courseMapLessons)
-                        Positioned(
-                          left: (_mapWidth * lesson.xAlign) - 38,
-                          top: lesson.top,
-                          child: _CourseMapNode(
-                            lesson: lesson,
-                            onTap: () => _showLessonSheet(context, lesson),
+                  width: constraints.maxWidth,
+                  height: scaledMapHeight,
+                  child: FittedBox(
+                    fit: BoxFit.fitWidth,
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: _mapWidth,
+                      height: _mapHeight,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _CourseMapScenePainter(courseMapLessons),
+                            ),
                           ),
-                        ),
-                    ],
+                          const Positioned(
+                            left: 286,
+                            top: 176,
+                            child: _MainMonumentCluster(),
+                          ),
+                          const Positioned(
+                            left: 86,
+                            top: 902,
+                            child: _ReflectivePool(),
+                          ),
+                          const Positioned(
+                            right: 96,
+                            top: 336,
+                            child: _MiniTower(),
+                          ),
+                          for (final lesson in courseMapLessons)
+                            Positioned(
+                              left: (_mapWidth * lesson.xAlign) - 38,
+                              top: lesson.top,
+                              child: _CourseMapNode(
+                                lesson: lesson,
+                                onTap: () => _showLessonSheet(context, lesson),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

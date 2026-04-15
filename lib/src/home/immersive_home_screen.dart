@@ -25,13 +25,21 @@ class ImmersiveHomeScreen extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxHeight < 780 || constraints.maxWidth < 390;
-        final extraCompact = constraints.maxHeight < 700;
-        final gap = extraCompact ? 10.0 : 14.0;
+        final compact = constraints.maxHeight < 840 || constraints.maxWidth < 390;
+        final extraCompact = constraints.maxHeight < 780 || constraints.maxWidth < 370;
+        final gap = extraCompact ? 8.0 : 12.0;
         final horizontalPadding = compact ? 18.0 : 20.0;
         final topInset = viewPadding.top + (compact ? 12.0 : 18.0);
         final bottomInset = viewPadding.bottom + 14.0;
-        final buttonHeight = compact ? 52.0 : 58.0;
+        final buttonHeight = compact ? 50.0 : 58.0;
+        final navHeight = compact ? 72.0 : 78.0;
+        final availableHeight = constraints.maxHeight - topInset - bottomInset;
+        final fixedHeight =
+            (compact ? 34.0 : 38.0) + buttonHeight + 24.0 + navHeight + (gap * 5);
+        final remaining = (availableHeight - fixedHeight).clamp(320.0, 620.0);
+        final heroHeight = remaining * (extraCompact ? 0.42 : 0.45);
+        final cardHeight = remaining * (extraCompact ? 0.22 : 0.24);
+        final progressHeight = remaining - heroHeight - cardHeight;
 
         return Stack(
           children: [
@@ -44,117 +52,123 @@ class ImmersiveHomeScreen extends StatelessWidget {
                   horizontalPadding,
                   bottomInset,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: const [
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: _PillTag(
-                              text: 'CV 手语识别 × 沉浸式教学',
-                              solid: true,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        _PillTag(
-                          text: '愿每一个手势都被看见',
-                          solid: false,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: gap),
-                    Expanded(
-                      flex: extraCompact ? 42 : 46,
-                      child: _HeroMonumentPanel(
-                        compact: compact,
-                        onStoryTap: onStoryTap,
-                      ),
-                    ),
-                    SizedBox(height: gap),
-                    SizedBox(
-                      height: buttonHeight,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _PrimaryActionButton(
-                              label: '开始练习',
-                              compact: compact,
-                              onTap: onPracticeTap,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _GlassActionButton(
-                              label: '课程地图',
-                              compact: compact,
-                              onTap: onLessonsTap,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: gap),
-                    const Row(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: availableHeight),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            '今日旅程',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF27314F),
+                        Row(
+                          children: const [
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: _PillTag(
+                                  text: 'CV 手语识别 × 沉浸式教学',
+                                  solid: true,
+                                ),
+                              ),
                             ),
+                            SizedBox(width: 12),
+                            _PillTag(
+                              text: '愿每一个手势都被看见',
+                              solid: false,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: heroHeight,
+                          child: _HeroMonumentPanel(
+                            compact: compact,
+                            onStoryTap: onStoryTap,
                           ),
                         ),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: buttonHeight,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _PrimaryActionButton(
+                                  label: '开始练习',
+                                  compact: compact,
+                                  onTap: onPracticeTap,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: _GlassActionButton(
+                                  label: '课程地图',
+                                  compact: compact,
+                                  onTap: onLessonsTap,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: gap),
                         Text(
+                          '今日旅程',
+                          style: TextStyle(
+                            fontSize: compact ? 18 : 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF27314F),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
                           'Monument Valley Mood',
                           style: TextStyle(
                             fontSize: 12,
                             color: Color(0xFF7B85A2),
                           ),
                         ),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: cardHeight,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _JourneyGlassCard(
+                                  compact: compact,
+                                  title: '基础手势',
+                                  description: '从问候、感谢等高频手势开始，建立最自然的表达感。',
+                                  icon: Icons.sign_language_rounded,
+                                  accent: const Color(0xFFFFD6C8),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _JourneyGlassCard(
+                                  compact: compact,
+                                  title: '实时识别',
+                                  description: '用镜头捕捉动作细节，边练边看反馈，让学习更有陪伴感。',
+                                  icon: Icons.camera_alt_outlined,
+                                  accent: const Color(0xFFD7E7FF),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: progressHeight,
+                          child: _LearningProgressCard(
+                            compact: compact,
+                            progress: progress,
+                            onLessonsTap: onLessonsTap,
+                          ),
+                        ),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: navHeight,
+                          child: bottomNav,
+                        ),
                       ],
                     ),
-                    SizedBox(height: gap),
-                    Expanded(
-                      flex: extraCompact ? 26 : 24,
-                      child: Row(
-                        children: const [
-                          Expanded(
-                            child: _JourneyGlassCard(
-                              title: '基础手势',
-                              description: '从问候、感谢等高频手势开始，建立最自然的表达感。',
-                              icon: Icons.sign_language_rounded,
-                              accent: Color(0xFFFFD6C8),
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: _JourneyGlassCard(
-                              title: '实时识别',
-                              description: '用镜头捕捉动作细节，边练边看反馈，让学习更有陪伴感。',
-                              icon: Icons.camera_alt_outlined,
-                              accent: Color(0xFFD7E7FF),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: gap),
-                    Expanded(
-                      flex: extraCompact ? 32 : 30,
-                      child: _LearningProgressCard(
-                        compact: compact,
-                        progress: progress,
-                        onLessonsTap: onLessonsTap,
-                      ),
-                    ),
-                    SizedBox(height: gap),
-                    bottomNav,
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -346,19 +360,29 @@ class _HeroMonumentPanel extends StatelessWidget {
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final titleSize = compact ? 32.0 : 38.0;
-              final paragraphSize = compact ? 13.0 : 14.0;
+              final narrow = constraints.maxWidth < 320;
+              final titleSize = narrow
+                  ? 24.0
+                  : compact
+                      ? 28.0
+                      : 38.0;
+              final paragraphSize = narrow
+                  ? 11.5
+                  : compact
+                      ? 12.0
+                      : 14.0;
               return Row(
                 children: [
                   Expanded(
-                    flex: 11,
+                    flex: narrow ? 13 : 12,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                            horizontal: 10,
+                            vertical: 7,
                           ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(999),
@@ -375,29 +399,30 @@ class _HeroMonumentPanel extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const Spacer(),
+                        SizedBox(height: compact ? 10 : 14),
                         Text(
                           '让我听见你',
+                          maxLines: 2,
                           style: TextStyle(
                             fontSize: titleSize,
-                            height: 1.02,
+                            height: 1.04,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.8,
                             color: const Color(0xFF27314F),
                           ),
                         ),
-                        SizedBox(height: compact ? 10 : 12),
+                        SizedBox(height: compact ? 8 : 12),
                         Text(
                           '一款温柔、沉浸的手语学习 App。用镜头理解动作，用柔和的界面陪你从“看见手势”走向“真正表达”。',
-                          maxLines: compact ? 4 : 5,
+                          maxLines: narrow ? 3 : compact ? 3 : 4,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: paragraphSize,
-                            height: 1.65,
+                            height: 1.55,
                             color: const Color(0xFF66708D),
                           ),
                         ),
-                        SizedBox(height: compact ? 12 : 14),
+                        SizedBox(height: compact ? 8 : 14),
                         _CompactGlassButton(
                           label: '手语故事',
                           compact: compact,
@@ -406,9 +431,9 @@ class _HeroMonumentPanel extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(width: compact ? 10 : 14),
+                  SizedBox(width: compact ? 8 : 14),
                   Expanded(
-                    flex: 9,
+                    flex: narrow ? 7 : 8,
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(28),
@@ -421,8 +446,11 @@ class _HeroMonumentPanel extends StatelessWidget {
                           ],
                         ),
                       ),
-                      child: CustomPaint(
-                        painter: _MonumentHeroPainter(),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: CustomPaint(
+                          painter: _MonumentHeroPainter(),
+                        ),
                       ),
                     ),
                   ),
@@ -571,12 +599,14 @@ class _GlassActionButton extends StatelessWidget {
 }
 
 class _JourneyGlassCard extends StatelessWidget {
+  final bool compact;
   final String title;
   final String description;
   final IconData icon;
   final Color accent;
 
   const _JourneyGlassCard({
+    required this.compact,
     required this.title,
     required this.description,
     required this.icon,
@@ -590,7 +620,7 @@ class _JourneyGlassCard extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(compact ? 12 : 16),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.42),
             borderRadius: BorderRadius.circular(28),
@@ -610,15 +640,15 @@ class _JourneyGlassCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: compact ? 42 : 48,
+                height: compact ? 42 : 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: accent.withOpacity(0.86),
                 ),
                 child: Icon(
                   icon,
-                  size: 24,
+                  size: compact ? 21 : 24,
                   color: const Color(0xFF3E4A68),
                 ),
               ),
@@ -627,21 +657,21 @@ class _JourneyGlassCard extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 17,
+                style: TextStyle(
+                  fontSize: compact ? 15 : 17,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF27314F),
+                  color: const Color(0xFF27314F),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: compact ? 5 : 8),
               Text(
                 description,
-                maxLines: 3,
+                maxLines: compact ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  height: 1.6,
-                  color: Color(0xFF68728F),
+                style: TextStyle(
+                  fontSize: compact ? 11.5 : 12.5,
+                  height: compact ? 1.45 : 1.6,
+                  color: const Color(0xFF68728F),
                 ),
               ),
             ],
@@ -714,15 +744,15 @@ class _LearningProgressCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 '已完成 ${progress.completedCount}/${progress.totalCount} 节，当前正在学习「${progress.currentLesson.title}」',
-                maxLines: 2,
+                maxLines: compact ? 1 : 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  height: 1.6,
-                  color: Color(0xFF66708D),
+                style: TextStyle(
+                  fontSize: compact ? 11.5 : 12.5,
+                  height: compact ? 1.4 : 1.6,
+                  color: const Color(0xFF66708D),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: compact ? 10 : 12),
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
@@ -734,11 +764,12 @@ class _LearningProgressCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
+              SizedBox(height: compact ? 10 : 14),
               Row(
                 children: [
                   Expanded(
                     child: _ProgressMetricChip(
+                      compact: compact,
                       label: '已解锁',
                       value: '${progress.unlockedCount} 节',
                     ),
@@ -746,6 +777,7 @@ class _LearningProgressCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _ProgressMetricChip(
+                      compact: compact,
                       label: '下一节',
                       value: progress.nextLesson?.title ?? '继续当前课程',
                     ),
@@ -769,10 +801,12 @@ class _LearningProgressCard extends StatelessWidget {
 }
 
 class _ProgressMetricChip extends StatelessWidget {
+  final bool compact;
   final String label;
   final String value;
 
   const _ProgressMetricChip({
+    required this.compact,
     required this.label,
     required this.value,
   });
@@ -780,7 +814,10 @@ class _ProgressMetricChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : 12,
+        vertical: compact ? 8 : 10,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         color: Colors.white.withOpacity(0.46),
@@ -792,9 +829,9 @@ class _ProgressMetricChip extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF7A849F),
+            style: TextStyle(
+              fontSize: compact ? 9.5 : 10.5,
+              color: const Color(0xFF7A849F),
             ),
           ),
           const SizedBox(height: 4),
@@ -802,10 +839,10 @@ class _ProgressMetricChip extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
+            style: TextStyle(
+              fontSize: compact ? 12 : 13,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF394260),
+              color: const Color(0xFF394260),
             ),
           ),
         ],
@@ -899,25 +936,21 @@ class _TapScaleState extends State<_TapScale> {
 class _MonumentHeroPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    final sunCenter = Offset(size.width * 0.82, size.height * 0.12);
     final sunPaint = Paint()
       ..shader = const RadialGradient(
         colors: [Color(0xFFFFF0C4), Color(0x00FFF0C4)],
-      ).createShader(Rect.fromCircle(
-        center: Offset(size.width * 0.82, size.height * 0.12),
-        radius: size.width * 0.20,
-      ));
-    canvas.drawCircle(
-      Offset(size.width * 0.82, size.height * 0.12),
-      size.width * 0.18,
-      sunPaint,
-    );
+      ).createShader(
+        Rect.fromCircle(center: sunCenter, radius: size.width * 0.22),
+      );
+    canvas.drawCircle(sunCenter, size.width * 0.18, sunPaint);
 
     final mistPaint = Paint()..color = Colors.white.withOpacity(0.16);
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width * 0.30, size.height * 0.84),
-        width: size.width * 0.62,
-        height: size.height * 0.10,
+        center: Offset(size.width * 0.34, size.height * 0.87),
+        width: size.width * 0.70,
+        height: size.height * 0.12,
       ),
       mistPaint,
     );
@@ -925,10 +958,10 @@ class _MonumentHeroPainter extends CustomPainter {
     _drawTower(
       canvas,
       rect: Rect.fromLTWH(
-        size.width * 0.08,
-        size.height * 0.52,
-        size.width * 0.14,
-        size.height * 0.26,
+        size.width * 0.06,
+        size.height * 0.50,
+        size.width * 0.15,
+        size.height * 0.28,
       ),
       top: const Color(0xFFF7E8D7),
       front: const Color(0xFFEFA9A4),
@@ -937,10 +970,10 @@ class _MonumentHeroPainter extends CustomPainter {
     _drawTower(
       canvas,
       rect: Rect.fromLTWH(
-        size.width * 0.64,
-        size.height * 0.44,
+        size.width * 0.66,
+        size.height * 0.42,
         size.width * 0.13,
-        size.height * 0.30,
+        size.height * 0.34,
       ),
       top: const Color(0xFFF7E8D8),
       front: const Color(0xFFE8A39D),
@@ -949,94 +982,180 @@ class _MonumentHeroPainter extends CustomPainter {
     _drawTower(
       canvas,
       rect: Rect.fromLTWH(
-        size.width * 0.26,
-        size.height * 0.22,
-        size.width * 0.32,
-        size.height * 0.48,
+        size.width * 0.24,
+        size.height * 0.18,
+        size.width * 0.34,
+        size.height * 0.56,
       ),
       top: const Color(0xFFF8E7D7),
       front: const Color(0xFFD8D1F0),
       side: const Color(0xFFBAB2DB),
     );
 
+    _drawBridge(
+      canvas,
+      Offset(size.width * 0.14, size.height * 0.59),
+      Offset(size.width * 0.31, size.height * 0.49),
+    );
+    _drawBridge(
+      canvas,
+      Offset(size.width * 0.54, size.height * 0.55),
+      Offset(size.width * 0.69, size.height * 0.55),
+    );
+    _drawBridge(
+      canvas,
+      Offset(size.width * 0.50, size.height * 0.74),
+      Offset(size.width * 0.73, size.height * 0.68),
+    );
+
+    _drawStairs(
+      canvas,
+      Offset(size.width * 0.15, size.height * 0.60),
+      stepWidth: size.width * 0.052,
+      steps: 10,
+      tilt: -1,
+    );
+    _drawStairs(
+      canvas,
+      Offset(size.width * 0.67, size.height * 0.57),
+      stepWidth: size.width * 0.052,
+      steps: 10,
+      tilt: 1,
+    );
+    _drawStairs(
+      canvas,
+      Offset(size.width * 0.62, size.height * 0.69),
+      stepWidth: size.width * 0.048,
+      steps: 9,
+      tilt: 1,
+    );
+
     final archPaint = Paint()
       ..color = const Color(0xFFF0C9BF)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.04
+      ..strokeWidth = size.width * 0.038
       ..strokeCap = StrokeCap.round;
     final arch = Path()
       ..moveTo(size.width * 0.35, size.height * 0.62)
       ..quadraticBezierTo(
         size.width * 0.34,
-        size.height * 0.48,
+        size.height * 0.47,
         size.width * 0.43,
-        size.height * 0.43,
+        size.height * 0.41,
       )
       ..quadraticBezierTo(
+        size.width * 0.53,
+        size.height * 0.47,
         size.width * 0.52,
-        size.height * 0.48,
-        size.width * 0.51,
         size.height * 0.62,
       );
     canvas.drawPath(arch, archPaint);
     canvas.drawLine(
-      Offset(size.width * 0.43, size.height * 0.43),
-      Offset(size.width * 0.43, size.height * 0.70),
+      Offset(size.width * 0.43, size.height * 0.41),
+      Offset(size.width * 0.43, size.height * 0.72),
       Paint()
         ..color = const Color(0xFFF0C9BF)
-        ..strokeWidth = size.width * 0.034
+        ..strokeWidth = size.width * 0.032
         ..strokeCap = StrokeCap.round,
     );
 
-    _drawBridge(
-      canvas,
-      Offset(size.width * 0.18, size.height * 0.60),
-      Offset(size.width * 0.33, size.height * 0.52),
+    final doorPaint = Paint()..color = const Color(0xFF9097B7).withOpacity(0.58);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          size.width * 0.38,
+          size.height * 0.72,
+          size.width * 0.08,
+          size.height * 0.10,
+        ),
+        const Radius.circular(18),
+      ),
+      doorPaint,
     );
-    _drawBridge(
-      canvas,
-      Offset(size.width * 0.57, size.height * 0.56),
-      Offset(size.width * 0.70, size.height * 0.56),
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          size.width * 0.10,
+          size.height * 0.62,
+          size.width * 0.05,
+          size.height * 0.08,
+        ),
+        const Radius.circular(14),
+      ),
+      doorPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          size.width * 0.70,
+          size.height * 0.56,
+          size.width * 0.05,
+          size.height * 0.08,
+        ),
+        const Radius.circular(14),
+      ),
+      doorPaint,
     );
 
-    _drawStairs(
-      canvas,
-      Offset(size.width * 0.18, size.height * 0.61),
-      stepWidth: size.width * 0.055,
-      steps: 9,
-      tilt: -1,
+    final poolPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          const Color(0xFF92E3F0).withOpacity(0.72),
+          const Color(0xFFF1FCFF).withOpacity(0.84),
+        ],
+      ).createShader(
+        Rect.fromLTWH(
+          size.width * 0.02,
+          size.height * 0.76,
+          size.width * 0.22,
+          size.height * 0.11,
+        ),
+      );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          size.width * 0.02,
+          size.height * 0.76,
+          size.width * 0.22,
+          size.height * 0.11,
+        ),
+        Radius.circular(size.width * 0.03),
+      ),
+      poolPaint,
     );
-    _drawStairs(
-      canvas,
-      Offset(size.width * 0.68, size.height * 0.58),
-      stepWidth: size.width * 0.055,
-      steps: 9,
-      tilt: 1,
+
+    final glowPaint = Paint()
+      ..color = const Color(0xFFFFD684).withOpacity(0.74)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(
+      Offset(size.width * 0.72, size.height * 0.43),
+      size.width * 0.035,
+      glowPaint,
     );
 
     final personPaint = Paint()..color = const Color(0xFF36405D);
     canvas.drawCircle(
-      Offset(size.width * 0.46, size.height * 0.79),
+      Offset(size.width * 0.46, size.height * 0.83),
       size.width * 0.014,
       personPaint,
     );
     canvas.drawRect(
       Rect.fromCenter(
-        center: Offset(size.width * 0.46, size.height * 0.82),
+        center: Offset(size.width * 0.46, size.height * 0.86),
         width: size.width * 0.018,
         height: size.height * 0.04,
       ),
       personPaint,
     );
 
-    final glowPaint = Paint()
-      ..color = const Color(0xFFFFD684).withOpacity(0.72)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-    canvas.drawCircle(
-      Offset(size.width * 0.71, size.height * 0.43),
-      size.width * 0.03,
-      glowPaint,
-    );
+    final sparklePaint = Paint()
+      ..color = Colors.white.withOpacity(0.52)
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    _drawSparkle(canvas, Offset(size.width * 0.86, size.height * 0.88), sparklePaint);
+    _drawSparkle(canvas, Offset(size.width * 0.18, size.height * 0.34), sparklePaint);
   }
 
   void _drawTower(
@@ -1121,6 +1240,19 @@ class _MonumentHeroPainter extends CustomPainter {
         paint,
       );
     }
+  }
+
+  void _drawSparkle(Canvas canvas, Offset center, Paint paint) {
+    canvas.drawLine(
+      Offset(center.dx - 5, center.dy),
+      Offset(center.dx + 5, center.dy),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(center.dx, center.dy - 5),
+      Offset(center.dx, center.dy + 5),
+      paint,
+    );
   }
 
   @override
