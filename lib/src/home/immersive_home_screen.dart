@@ -133,7 +133,6 @@ class ImmersiveHomeScreen extends StatelessWidget {
                       _LearningProgressCard(
                         compact: compact,
                         progress: progress,
-                        onLessonsTap: onLessonsTap,
                       ),
                     ],
                   ),
@@ -617,12 +616,10 @@ class _JourneyGlassCard extends StatelessWidget {
 class _LearningProgressCard extends StatelessWidget {
   final bool compact;
   final _LearningProgress progress;
-  final VoidCallback onLessonsTap;
 
   const _LearningProgressCard({
     required this.compact,
     required this.progress,
-    required this.onLessonsTap,
   });
 
   @override
@@ -722,15 +719,6 @@ class _LearningProgressCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: _CompactGlassButton(
-                            label: '查看地图',
-                            compact: compact,
-                            onTap: onLessonsTap,
-                          ),
-                        ),
                       ],
                     );
                   }
@@ -750,14 +738,6 @@ class _LearningProgressCard extends StatelessWidget {
                           compact: compact,
                           label: '下一节',
                           value: progress.nextLesson?.title ?? '继续当前课程',
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _CompactGlassButton(
-                          label: '查看地图',
-                          compact: compact,
-                          onTap: onLessonsTap,
                         ),
                       ),
                     ],
