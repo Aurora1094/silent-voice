@@ -68,10 +68,10 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '入门',
     progressValue: 1,
     steps: 5,
-    colors: [Color(0xFFFFD2C4), Color(0xFFFFE2D7)],
+    colors: [Color(0xFFF9C8B2), Color(0xFFFFE7DA)],
     lane: 0,
-    xAlign: 0.22,
-    top: 268,
+    xAlign: 0.14,
+    top: 82,
     state: CourseMapLessonState.completed,
   ),
   CourseMapLesson(
@@ -85,10 +85,10 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '入门',
     progressValue: 1,
     steps: 6,
-    colors: [Color(0xFFFFE2AE), Color(0xFFFFF0CF)],
+    colors: [Color(0xFFF5D76C), Color(0xFFFFF0C9)],
     lane: 1,
-    xAlign: 0.74,
-    top: 416,
+    xAlign: 0.72,
+    top: 334,
     state: CourseMapLessonState.completed,
   ),
   CourseMapLesson(
@@ -102,10 +102,10 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '基础',
     progressValue: 0.62,
     steps: 4,
-    colors: [Color(0xFFA9E3D8), Color(0xFFD5F4EE)],
+    colors: [Color(0xFF8FD6C1), Color(0xFFD7F4E7)],
     lane: 2,
-    xAlign: 0.82,
-    top: 640,
+    xAlign: 0.43,
+    top: 678,
     state: CourseMapLessonState.current,
   ),
   CourseMapLesson(
@@ -119,10 +119,10 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '基础',
     progressValue: 0.12,
     steps: 7,
-    colors: [Color(0xFFD8CCF6), Color(0xFFEDE7FF)],
+    colors: [Color(0xFFD8CCF6), Color(0xFFF0E8FF)],
     lane: 1,
-    xAlign: 0.44,
-    top: 858,
+    xAlign: 0.30,
+    top: 936,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
@@ -136,10 +136,10 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '进阶',
     progressValue: 0.05,
     steps: 8,
-    colors: [Color(0xFFFFD1DA), Color(0xFFFFE7EC)],
+    colors: [Color(0xFFF7C9CB), Color(0xFFFFE6E8)],
     lane: 2,
-    xAlign: 0.78,
-    top: 1082,
+    xAlign: 0.72,
+    top: 1108,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
@@ -153,10 +153,10 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '进阶',
     progressValue: 0,
     steps: 10,
-    colors: [Color(0xFFCFCAE0), Color(0xFFE7E3F0)],
+    colors: [Color(0xFFCCC7E3), Color(0xFFEAE7F3)],
     lane: 0,
-    xAlign: 0.28,
-    top: 1298,
+    xAlign: 0.18,
+    top: 1332,
     state: CourseMapLessonState.locked,
   ),
 ];
@@ -176,7 +176,7 @@ class MonumentCourseMapScreen extends StatefulWidget {
 
 class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
   static const double _mapWidth = 760;
-  static const double _mapHeight = 1600;
+  static const double _mapHeight = 1620;
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +193,7 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
       builder: (context, constraints) {
         final mapScale = constraints.maxWidth / _mapWidth;
         final scaledMapHeight = _mapHeight * mapScale;
-        final topOverlayHeight = viewPadding.top + 172.0;
+        final topOverlayHeight = viewPadding.top + 160.0;
         final bottomOverlayHeight = viewPadding.bottom + 110.0;
 
         return Stack(
@@ -223,23 +223,28 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen> {
                         ),
                       ),
                       const Positioned(
-                        left: 184,
-                        top: 172,
+                        left: 152,
+                        top: 138,
                         child: _MainMonumentCluster(),
                       ),
                       const Positioned(
-                        left: 44,
-                        top: 964,
+                        left: 6,
+                        top: 96,
                         child: _ReflectivePool(),
                       ),
                       const Positioned(
-                        right: 34,
-                        top: 362,
+                        left: 22,
+                        top: 832,
+                        child: _ReflectivePool(),
+                      ),
+                      const Positioned(
+                        right: 22,
+                        top: 96,
                         child: _MiniTower(),
                       ),
                       for (final lesson in courseMapLessons)
                         Positioned(
-                          left: (_mapWidth * lesson.xAlign) - 56,
+                          left: (_mapWidth * lesson.xAlign) - 68,
                           top: lesson.top,
                           child: _CourseMapNode(
                             lesson: lesson,
@@ -529,171 +534,136 @@ class _CourseMapNodeState extends State<_CourseMapNode>
     final lesson = widget.lesson;
     final locked = lesson.locked;
     final completed = lesson.state == CourseMapLessonState.completed;
+    final current = lesson.current;
 
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final glow = lesson.current ? 0.68 + (_controller.value * 0.32) : 0.42;
+        final glow = current ? 0.72 + (_controller.value * 0.28) : 0.38;
         return GestureDetector(
           onTap: widget.onTap,
           child: SizedBox(
-            width: 118,
+            width: 154,
             child: Column(
-            children: [
-              SizedBox(
-                width: 118,
-                height: 98,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.topCenter,
-                  children: [
-                    Positioned(
-                      bottom: 0,
-                      child: CustomPaint(
-                        size: const Size(108, 58),
-                        painter: _NodePedestalPainter(
-                          topColor: locked
-                              ? const Color(0xFFE5E0EA)
-                              : lesson.colors.last,
-                          frontColor: locked
-                              ? const Color(0xFFD5D0DD)
-                              : lesson.colors.first.withOpacity(0.78),
-                          sideColor: locked
-                              ? const Color(0xFFC2BCCB)
-                              : const Color(0xFFD9898F).withOpacity(
-                                  lesson.lane.isEven ? 0.74 : 0.58,
-                                ),
+              children: [
+                SizedBox(
+                  width: 154,
+                  height: 154,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.topCenter,
+                    children: [
+                      Positioned(
+                        bottom: 14,
+                        child: CustomPaint(
+                          size: const Size(136, 96),
+                          painter: _NodePedestalPainter(
+                            topColor: locked
+                                ? const Color(0xFFEAE5EF)
+                                : lesson.colors.last,
+                            frontColor: locked
+                                ? const Color(0xFFD8D3DE)
+                                : lesson.colors.first.withOpacity(0.86),
+                            sideColor: locked
+                                ? const Color(0xFFC3BCCB)
+                                : (lesson.lane == 1
+                                        ? const Color(0xFFF0C35F)
+                                        : lesson.lane == 2
+                                            ? const Color(0xFFD3BFE8)
+                                            : const Color(0xFFF09B84))
+                                    .withOpacity(0.78),
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      child: Container(
-                        width: 84,
-                        height: 84,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Colors.white.withOpacity(locked ? 0.82 : 0.98),
-                              (locked
-                                      ? const Color(0xFFD0CBD9)
-                                      : lesson.colors.first)
-                                  .withOpacity(0.96),
-                            ],
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.82),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (locked
-                                      ? const Color(0xFFBCB6C6)
-                                      : lesson.colors.first)
-                                  .withOpacity(glow),
-                              blurRadius: lesson.current ? 34 : 20,
-                              spreadRadius: lesson.current ? 5 : 1,
-                            ),
-                          ],
+                      Positioned(
+                        top: current ? 10 : 6,
+                        child: _NodeTotem(
+                          lesson: lesson,
+                          glow: glow,
                         ),
-                        child: Center(
+                      ),
+                      if (completed)
+                        Positioned(
+                          right: 8,
+                          top: 20,
                           child: Container(
-                            width: 46,
-                            height: 46,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              color: Colors.white.withOpacity(0.86),
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFFFE184).withOpacity(0.92),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF2E3557).withOpacity(0.06),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
+                                  color: const Color(0xFFFFE184).withOpacity(0.44),
+                                  blurRadius: 14,
                                 ),
                               ],
                             ),
                             child: Icon(
-                              locked ? Icons.lock_outline_rounded : lesson.icon,
-                              size: 24,
-                              color: locked
-                                  ? const Color(0xFF8B8795)
-                                  : const Color(0xFF47516E),
+                              completed && lesson.title == '谢谢'
+                                  ? Icons.check_rounded
+                                  : Icons.auto_awesome_rounded,
+                              size: 19,
+                              color: const Color(0xFF6B5B37),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    if (completed)
-                      Positioned(
-                        right: 6,
-                        top: 8,
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.92),
-                            boxShadow: [
-                              BoxShadow(
-                                color: lesson.colors.first.withOpacity(0.42),
-                                blurRadius: 14,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.check_rounded,
-                            size: 16,
-                            color: Color(0xFF3C516C),
+                      if (current)
+                        Positioned(
+                          right: 10,
+                          bottom: 16,
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFFFFC8AF).withOpacity(0.96),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFFC8AF).withOpacity(0.34),
+                                  blurRadius: 16,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 22,
+                              color: Color(0xFF7E5E57),
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                constraints: const BoxConstraints(maxWidth: 110),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: Colors.white.withOpacity(0.58),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.68),
-                    width: 1,
+                    ],
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      lesson.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: locked
-                            ? const Color(0xFF8B8795)
-                            : const Color(0xFF36405D),
-                      ),
+                const SizedBox(height: 4),
+                Container(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: Colors.white.withOpacity(0.64),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.70),
+                      width: 1,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      lesson.stateLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: locked
-                            ? const Color(0xFF9B96A5)
-                            : const Color(0xFF6E7795),
-                      ),
+                  ),
+                  child: Text(
+                    lesson.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: locked
+                          ? const Color(0xFF8B8795)
+                          : const Color(0xFF36405D),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         );
       },
@@ -715,26 +685,46 @@ class _NodePedestalPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final skew = size.width * 0.18;
-    final topFace = Path()
+    final topSlabHeight = size.height * 0.24;
+    final bodyTop = size.height * 0.30;
+    final slabGap = size.height * 0.06;
+    final slabTopFace = Path()
       ..moveTo(skew, 0)
       ..lineTo(size.width, 0)
-      ..lineTo(size.width - skew, size.height * 0.28)
-      ..lineTo(0, size.height * 0.28)
+      ..lineTo(size.width - skew, topSlabHeight)
+      ..lineTo(0, topSlabHeight)
+      ..close();
+    final slabFrontFace = Path()
+      ..moveTo(0, topSlabHeight)
+      ..lineTo(size.width - skew, topSlabHeight)
+      ..lineTo(size.width - skew, topSlabHeight + slabGap)
+      ..lineTo(0, topSlabHeight + slabGap)
+      ..close();
+    final topFace = Path()
+      ..moveTo(skew, bodyTop)
+      ..lineTo(size.width, bodyTop)
+      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
+      ..lineTo(0, bodyTop + size.height * 0.22)
       ..close();
     final frontFace = Path()
-      ..moveTo(0, size.height * 0.28)
-      ..lineTo(size.width - skew, size.height * 0.28)
+      ..moveTo(0, bodyTop + size.height * 0.22)
+      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
       ..lineTo(size.width - skew, size.height)
       ..lineTo(0, size.height)
       ..close();
     final sideFace = Path()
-      ..moveTo(size.width, 0)
-      ..lineTo(size.width - skew, size.height * 0.28)
+      ..moveTo(size.width, bodyTop)
+      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
       ..lineTo(size.width - skew, size.height)
-      ..lineTo(size.width, size.height * 0.72)
+      ..lineTo(size.width, size.height * 0.78)
       ..close();
 
     canvas.drawShadow(frontFace, const Color(0x162E3557), 12, false);
+    canvas.drawPath(slabTopFace, Paint()..color = Colors.white.withOpacity(0.92));
+    canvas.drawPath(
+      slabFrontFace,
+      Paint()..color = topColor.withOpacity(0.82),
+    );
     canvas.drawPath(topFace, Paint()..color = topColor);
     canvas.drawPath(frontFace, Paint()..color = frontColor);
     canvas.drawPath(sideFace, Paint()..color = sideColor);
@@ -745,6 +735,126 @@ class _NodePedestalPainter extends CustomPainter {
       oldDelegate.topColor != topColor ||
       oldDelegate.frontColor != frontColor ||
       oldDelegate.sideColor != sideColor;
+}
+
+class _NodeTotem extends StatelessWidget {
+  final CourseMapLesson lesson;
+  final double glow;
+
+  const _NodeTotem({
+    required this.lesson,
+    required this.glow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = lesson.locked;
+    if (lesson.current) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFFF2D8), Color(0xFFF6C7A8)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD7B6).withOpacity(0.50),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 40,
+            height: 86,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  lesson.colors.last.withOpacity(0.96),
+                  lesson.colors.first.withOpacity(0.96),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: lesson.colors.first.withOpacity(glow * 0.42),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Container(
+                width: 14,
+                height: 36,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF6C7B83).withOpacity(0.55),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Container(
+      width: 40,
+      height: 100,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: locked
+              ? const [Color(0xFFE7E1ED), Color(0xFFD8D2DE)]
+              : [
+                  lesson.colors.last.withOpacity(0.98),
+                  lesson.colors.first.withOpacity(0.98),
+                ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (locked ? const Color(0xFFC4BECD) : lesson.colors.first)
+                .withOpacity(glow * 0.42),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!locked && lesson.title == '谢谢')
+            const Icon(
+              Icons.auto_awesome_rounded,
+              size: 22,
+              color: Color(0xFFF0C749),
+            ),
+          if (!locked && lesson.title == '谢谢') const SizedBox(height: 4),
+          Container(
+            width: 14,
+            height: 36,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF6C6876).withOpacity(0.48),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _CourseDetailSheet extends StatelessWidget {
@@ -1122,88 +1232,138 @@ class _MainMonumentCluster extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 394,
-      height: 452,
+      width: 430,
+      height: 760,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
-            left: 24,
-            top: 208,
-            child: _IsoTower(
-              width: 92,
-              height: 180,
-              topColor: const Color(0xFFF7E8D7),
-              frontColor: const Color(0xFFECAEA7),
-              sideColor: const Color(0xFFD69198),
-            ),
-          ),
-          Positioned(
-            right: 18,
-            top: 192,
-            child: _IsoTower(
-              width: 74,
-              height: 176,
-              topColor: const Color(0xFFF7E8D8),
-              frontColor: const Color(0xFFE9A8A3),
-              sideColor: const Color(0xFFD38792),
-            ),
-          ),
-          Positioned(
-            left: 108,
-            top: 50,
-            child: _IsoTower(
-              width: 168,
-              height: 286,
-              topColor: const Color(0xFFF8E7D7),
-              frontColor: const Color(0xFFD8D1F0),
-              sideColor: const Color(0xFFBBB2DB),
-              title: 'SILENT\nVOICE',
-            ),
-          ),
-          Positioned(
-            left: 70,
-            right: 58,
-            bottom: 18,
+            left: 116,
+            top: 32,
             child: Container(
-              height: 82,
+              width: 176,
+              height: 520,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFF8E8D8), Color(0xFFE5C5C2)],
+                borderRadius: BorderRadius.circular(72),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFFF4C7B7).withOpacity(0.78),
+                    const Color(0xFFDCC3DA).withOpacity(0.74),
+                    const Color(0xFFC7C5EE).withOpacity(0.68),
+                  ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2E3557).withOpacity(0.08),
-                    blurRadius: 22,
-                    offset: const Offset(0, 14),
+                    color: const Color(0xFFB391C3).withOpacity(0.18),
+                    blurRadius: 30,
+                    offset: const Offset(0, 18),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 96,
+                    left: 0,
+                    right: 0,
+                    child: Text(
+                      'SILENT\nVOICE',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        height: 1.0,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 1.2,
+                        color: Colors.white.withOpacity(0.86),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 38,
+                    right: 38,
+                    bottom: 78,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 164,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.42),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        Container(
+                          width: 20,
+                          height: 164,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.42),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: 53,
+                    right: 53,
+                    bottom: 34,
+                    child: Container(
+                      height: 112,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.40),
+                          width: 14,
+                        ),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(54),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           Positioned(
-            left: 154,
-            top: 192,
-            child: SizedBox(
-              width: 86,
-              height: 102,
-              child: CustomPaint(
-                painter: _ArchPainter(),
+            left: 314,
+            top: 112,
+            child: Container(
+              width: 34,
+              height: 242,
+              decoration: BoxDecoration(
+                color: const Color(0xFFA8A6E4).withOpacity(0.58),
+                borderRadius: BorderRadius.circular(22),
               ),
             ),
           ),
           Positioned(
-            left: 194,
-            top: 314,
+            left: 74,
+            top: 514,
             child: Container(
-              width: 28,
-              height: 34,
+              width: 180,
+              height: 64,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: const Color(0xFF8E93B0).withOpacity(0.56),
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF9E3D1), Color(0xFFEFD8C8)],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 176,
+            bottom: 148,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF8D8EAF).withOpacity(0.64),
               ),
             ),
           ),
@@ -1312,35 +1472,70 @@ class _MiniTower extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 120,
-      height: 160,
+      width: 144,
+      height: 350,
       child: Stack(
         children: [
           Positioned(
-            left: 24,
-            top: 32,
-            child: _IsoTower(
-              width: 52,
-              height: 110,
-              topColor: const Color(0xFFF7E7D5),
-              frontColor: const Color(0xFFE8A39F),
-              sideColor: const Color(0xFFD48792),
+            right: 12,
+            top: 0,
+            child: Container(
+              width: 78,
+              height: 228,
+              decoration: BoxDecoration(
+                color: const Color(0xFF9CD8EA).withOpacity(0.58),
+                borderRadius: BorderRadius.circular(40),
+              ),
             ),
           ),
           Positioned(
-            left: 44,
-            top: 6,
+            right: 36,
+            top: 18,
             child: Container(
-              width: 32,
-              height: 32,
+              width: 54,
+              height: 24,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: const Color(0xFF6EA7BA).withOpacity(0.92),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 64,
+            top: 94,
+            child: Container(
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.70),
+                color: const Color(0xFF7AD4D3).withOpacity(0.54),
               ),
-              child: const Icon(
-                Icons.auto_awesome_rounded,
-                size: 18,
-                color: Color(0xFF4A5572),
+            ),
+          ),
+          Positioned(
+            right: 64,
+            top: 142,
+            child: Container(
+              width: 36,
+              height: 118,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDE9B92).withOpacity(0.58),
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 208,
+            child: SizedBox(
+              width: 86,
+              height: 56,
+              child: CustomPaint(
+                painter: _NodePedestalPainter(
+                  topColor: const Color(0xFFFCE6D8),
+                  frontColor: const Color(0xFFF4C8BF),
+                  sideColor: const Color(0xFFD37D79),
+                ),
               ),
             ),
           ),
@@ -1356,44 +1551,44 @@ class _ReflectivePool extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 144,
-      height: 156,
+      width: 160,
+      height: 280,
       child: Stack(
         children: [
           Positioned(
-            left: 30,
-            top: 46,
-            child: _IsoTower(
-              width: 46,
-              height: 86,
-              topColor: const Color(0xFFF8E8D8),
-              frontColor: const Color(0xFFE5C8D1),
-              sideColor: const Color(0xFFD6CBE9),
+            left: 8,
+            top: 34,
+            child: Container(
+              width: 126,
+              height: 210,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(34),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.34),
+                  width: 4,
+                ),
+                color: Colors.white.withOpacity(0.08),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.16),
+                    blurRadius: 12,
+                  ),
+                ],
+              ),
             ),
           ),
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              height: 54,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF8FE4EF).withOpacity(0.65),
-                    const Color(0xFFE8F7FB).withOpacity(0.78),
-                  ],
+            left: 16,
+            top: 0,
+            child: SizedBox(
+              width: 112,
+              height: 96,
+              child: CustomPaint(
+                painter: _NodePedestalPainter(
+                  topColor: const Color(0xFFFDE5D8),
+                  frontColor: const Color(0xFFF6D5C7),
+                  sideColor: const Color(0xFFF1997F),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8FE4EF).withOpacity(0.30),
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
             ),
           ),
@@ -1483,134 +1678,182 @@ class _CourseMapScenePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final mistPaint = Paint()..color = Colors.white.withOpacity(0.14);
+    final sunPaint = Paint()
+      ..shader = const RadialGradient(
+        colors: [Color(0x55FFEAA3), Color(0x00FFEAA3)],
+      ).createShader(
+        Rect.fromCircle(center: const Offset(630, 94), radius: 126),
+      );
+    canvas.drawCircle(const Offset(630, 94), 126, sunPaint);
+
+    final mistPaint = Paint()..color = Colors.white.withOpacity(0.16);
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width * 0.28, 248),
-        width: 240,
-        height: 86,
+        center: const Offset(244, 188),
+        width: 330,
+        height: 116,
       ),
       mistPaint,
     );
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width * 0.74, 1080),
-        width: 300,
-        height: 94,
+        center: const Offset(314, 1038),
+        width: 420,
+        height: 128,
       ),
       mistPaint,
     );
 
-    final capsulePaint = Paint()..color = const Color(0x66B8E2E6);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(560, 182, 76, 264),
-        const Radius.circular(38),
+        const Rect.fromLTWH(574, 84, 90, 326),
+        const Radius.circular(44),
       ),
-      capsulePaint,
+      Paint()..color = const Color(0x4C9FD8EA),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(72, 138, 84, 242),
-        const Radius.circular(40),
+        const Rect.fromLTWH(612, 98, 50, 24),
+        const Radius.circular(18),
       ),
-      Paint()..color = const Color(0x40FFFFFF),
+      Paint()..color = const Color(0xCC6EA7BA),
     );
-
-    final pathShadow = Paint()
-      ..color = const Color(0x122E3557)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 24;
-    final pathPaint = Paint()
-      ..color = const Color(0xFFF8E8D8)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 10;
+    canvas.drawCircle(
+      const Offset(620, 190),
+      24,
+      Paint()..color = const Color(0x5A7AD4D3),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(604, 212, 34, 138),
+        const Radius.circular(22),
+      ),
+      Paint()..color = const Color(0x66DE9B92),
+    );
 
     final lessonPoints = lessons
-        .map((lesson) => Offset((size.width * lesson.xAlign), lesson.top + 38))
+        .map((lesson) => Offset((size.width * lesson.xAlign) + 8, lesson.top + 88))
         .toList();
-    final route = Path()..moveTo(lessonPoints.first.dx, lessonPoints.first.dy);
-    for (var index = 1; index < lessonPoints.length; index++) {
-      final previous = lessonPoints[index - 1];
-      final current = lessonPoints[index];
-      route.cubicTo(
-        (previous.dx + current.dx) / 2,
-        previous.dy - 26,
-        (previous.dx + current.dx) / 2,
-        current.dy + 26,
-        current.dx,
-        current.dy,
-      );
-    }
 
-    canvas.drawPath(route, pathShadow);
-    canvas.drawPath(route, pathPaint);
+    _drawBridge(canvas, lessonPoints[0], lessonPoints[1], beamColor: const Color(0x55F6E1AF));
+    _drawLadder(canvas, const Offset(208, 256), const Offset(514, 430));
+    _drawBridge(canvas, lessonPoints[1], lessonPoints[2], beamColor: const Color(0x40D8C5F2));
+    _drawStairRibbon(canvas, const Offset(524, 508), const Offset(364, 728));
+    _drawBridge(canvas, lessonPoints[2], lessonPoints[3], beamColor: const Color(0x40C8D7FF));
+    _drawBridge(canvas, lessonPoints[2], lessonPoints[4], beamColor: const Color(0x34FFD7CE));
+    _drawBridge(canvas, lessonPoints[3], lessonPoints[5], beamColor: const Color(0x30E2D8FF));
 
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(56, 242, 180, 104),
-      top: const Color(0xFFF7E5D5),
-      front: const Color(0xFFE6B8BC),
-      side: const Color(0xFFD4C8EA),
+      rect: const Rect.fromLTWH(36, 132, 176, 84),
+      top: const Color(0xFFF8E7DA),
+      front: const Color(0xFFF4CFBC),
+      side: const Color(0xFFF09479),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(468, 376, 170, 104),
+      rect: const Rect.fromLTWH(448, 462, 168, 88),
+      top: const Color(0xFFFFF4D3),
+      front: const Color(0xFFF4DF8E),
+      side: const Color(0xFFECCB50),
+    );
+    _drawPlatform(
+      canvas,
+      rect: const Rect.fromLTWH(238, 726, 176, 96),
+      top: const Color(0xFFF8EAD7),
+      front: const Color(0xFFE0D5F2),
+      side: const Color(0xFFBCAFE0),
+    );
+    _drawPlatform(
+      canvas,
+      rect: const Rect.fromLTWH(122, 978, 168, 92),
       top: const Color(0xFFF7E8D8),
-      front: const Color(0xFFD8D0EF),
-      side: const Color(0xFFB8AFD8),
-    );
-    _drawPlatform(
-      canvas,
-      rect: const Rect.fromLTWH(528, 618, 152, 102),
-      top: const Color(0xFFF7E6D6),
-      front: const Color(0xFFEAB0A6),
-      side: const Color(0xFFD88E96),
-    );
-    _drawPlatform(
-      canvas,
-      rect: const Rect.fromLTWH(222, 854, 194, 112),
-      top: const Color(0xFFF7E6D7),
       front: const Color(0xFFD8D0EE),
       side: const Color(0xFFBAB2DB),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(484, 1084, 182, 106),
-      top: const Color(0xFFF8E7D7),
-      front: const Color(0xFFE7B2B3),
-      side: const Color(0xFFD5C8EA),
+      rect: const Rect.fromLTWH(486, 1168, 162, 92),
+      top: const Color(0xFFF9E8D8),
+      front: const Color(0xFFF0D2CF),
+      side: const Color(0xFFD78882),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(84, 1326, 198, 112),
-      top: const Color(0xFFF8E8D8),
+      rect: const Rect.fromLTWH(42, 1368, 174, 96),
+      top: const Color(0xFFF5E7D8),
       front: const Color(0xFFD8D1E8),
       side: const Color(0xFFBEB6D7),
     );
-    _drawPlatform(
-      canvas,
-      rect: const Rect.fromLTWH(258, 550, 122, 92),
-      top: const Color(0xFFF7E6D8),
-      front: const Color(0xFFE8C6BB),
-      side: const Color(0xFFD7CDEA),
-    );
-
-    _drawStairs(canvas, const Offset(482, 334), length: 116, tilt: 1);
-    _drawStairs(canvas, const Offset(588, 556), length: 120, tilt: 1);
-    _drawStairs(canvas, const Offset(102, 1008), length: 110, tilt: -1);
-    _drawStairs(canvas, const Offset(512, 1202), length: 118, tilt: -1);
-    _drawStairs(canvas, const Offset(318, 650), length: 86, tilt: 1);
 
     final sparklePaint = Paint()
       ..color = Colors.white.withOpacity(0.52)
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
-    _drawSparkle(canvas, const Offset(650, 1372), sparklePaint);
-    _drawSparkle(canvas, const Offset(74, 786), sparklePaint);
-    _drawSparkle(canvas, const Offset(538, 250), sparklePaint);
+    _drawSparkle(canvas, const Offset(676, 276), sparklePaint);
+    _drawSparkle(canvas, const Offset(114, 692), sparklePaint);
+    _drawSparkle(canvas, const Offset(564, 1008), sparklePaint);
+  }
+
+  void _drawBridge(Canvas canvas, Offset start, Offset end, {required Color beamColor}) {
+    final beam = Paint()
+      ..color = beamColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 28
+      ..strokeCap = StrokeCap.round;
+    final line = Paint()
+      ..color = const Color(0xFFF1E6CC)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, beam);
+    canvas.drawLine(start, end, line);
+  }
+
+  void _drawLadder(Canvas canvas, Offset start, Offset end) {
+    final rail = Paint()
+      ..color = const Color(0xFFECDCB1)
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, rail);
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    for (var i = 0; i < 6; i++) {
+      final t = i / 5;
+      final px = start.dx + (dx * t);
+      final py = start.dy + (dy * t);
+      canvas.drawLine(
+        Offset(px - 12, py - 8),
+        Offset(px + 2, py + 8),
+        Paint()
+          ..color = const Color(0xFFF5EED8)
+          ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  void _drawStairRibbon(Canvas canvas, Offset start, Offset end) {
+    final beam = Paint()
+      ..color = const Color(0x40D7C8F0)
+      ..strokeWidth = 24
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(start, end, beam);
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    for (var i = 0; i < 11; i++) {
+      final t = i / 10;
+      final px = start.dx + (dx * t);
+      final py = start.dy + (dy * t);
+      canvas.drawLine(
+        Offset(px - 16, py + 6),
+        Offset(px + 12, py - 6),
+        Paint()
+          ..color = const Color(0xFFF0E6C9)
+          ..strokeWidth = 4
+          ..strokeCap = StrokeCap.round,
+      );
+    }
   }
 
   void _drawPlatform(
