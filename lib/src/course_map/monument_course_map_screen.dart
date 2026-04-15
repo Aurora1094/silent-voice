@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -163,8 +164,10 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
     with SingleTickerProviderStateMixin {
   static const double _mapWidth = 760;
   static const double _mapHeight = 1670;
+  static const Duration _collapseDelay = Duration(milliseconds: 70);
 
   late final AnimationController _floatController;
+  Timer? _collapseTimer;
   int? _selectedIndex;
 
   @override
@@ -178,6 +181,7 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 
   @override
   void dispose() {
+    _collapseTimer?.cancel();
     _floatController.dispose();
     super.dispose();
   }
@@ -205,7 +209,6 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 
         return Stack(
           children: [
-            const Positioned.fill(child: _CourseMapBackground()),
             Positioned.fill(
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
@@ -213,9 +216,7 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                       (notification is ScrollStartNotification ||
                           notification is ScrollUpdateNotification ||
                           notification is UserScrollNotification)) {
-                    setState(() {
-                      _selectedIndex = null;
-                    });
+                    _scheduleCollapseCard();
                   }
                   return false;
                 },
@@ -249,36 +250,49 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                                   ),
                                 ),
                                 Positioned(
-                                  left: 146,
-                                  top: 184 + drift * 0.55,
-                                  child: const _CentralMonument(),
+                                  left: 152,
+                                  top: 190 + drift * 0.55,
+                                  child: const Opacity(
+                                    opacity: 0.92,
+                                    child: _CentralMonument(),
+                                  ),
                                 ),
                                 Positioned(
-                                  left: 16,
-                                  top: 118 + drift * 0.20,
-                                  child: const _GlassAlcove(),
+                                  left: 2,
+                                  top: 110 + drift * 0.20,
+                                  child: const Opacity(
+                                    opacity: 0.68,
+                                    child: _GlassAlcove(),
+                                  ),
                                 ),
                                 Positioned(
-                                  right: 20,
-                                  top: 124 + drift * 0.25,
-                                  child: const _SideCapsuleCluster(),
+                                  right: 4,
+                                  top: 112 + drift * 0.25,
+                                  child: const Opacity(
+                                    opacity: 0.64,
+                                    child: _SideCapsuleCluster(),
+                                  ),
                                 ),
                                 Positioned(
-                                  left: 42,
-                                  top: 1172 + drift * 0.12,
-                                  child: const _WaterPillar(),
+                                  left: 28,
+                                  top: 1184 + drift * 0.12,
+                                  child: const Opacity(
+                                    opacity: 0.74,
+                                    child: _WaterPillar(),
+                                  ),
                                 ),
                                 for (var i = 0; i < courseMapLessons.length; i++)
                                   Positioned(
                                     left: (_mapWidth * courseMapLessons[i].xAlign) - 68,
                                     top: courseMapLessons[i].top,
                                     child: _CourseMapNode(
-                                      lesson: courseMapLessons[i],
-                                      selected: _selectedIndex == i,
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedIndex = i;
-                                        });
+                                    lesson: courseMapLessons[i],
+                                    selected: _selectedIndex == i,
+                                    onTap: () {
+                                      _cancelCollapseCard();
+                                      setState(() {
+                                        _selectedIndex = i;
+                                      });
                                       },
                                     ),
                                   ),
@@ -325,12 +339,12 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
               bottom: navInset,
               child: ClipRect(
                 child: AnimatedSize(
-                  duration: const Duration(milliseconds: 320),
+                  duration: const Duration(milliseconds: 220),
                   curve: Curves.easeInOutCubicEmphasized,
                   alignment: Alignment.bottomCenter,
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 320),
-                    reverseDuration: const Duration(milliseconds: 280),
+                    duration: const Duration(milliseconds: 220),
+                    reverseDuration: const Duration(milliseconds: 180),
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) {
@@ -371,9 +385,9 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                             key: ValueKey('collapsed-course-card'),
                             height: 0,
                           )
-                        : IgnorePointer(
+                        : TapRegion(
                             key: ValueKey(selectedLesson.title),
-                            ignoring: false,
+                            onTapOutside: (_) => _dismissCard(),
                             child: _CourseInfoCard(lesson: selectedLesson),
                           ),
                   ),
@@ -394,91 +408,26 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
       },
     );
   }
-}
 
-class _CourseMapBackground extends StatelessWidget {
-  const _CourseMapBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFE6DDFC),
-            Color(0xFFEFE8FF),
-            Color(0xFFEAF4FF),
-            Color(0xFFFFEEE7),
-          ],
-          stops: [0.0, 0.32, 0.68, 1.0],
-        ),
-      ),
-      child: Stack(
-        children: const [
-          Positioned(
-            top: -42,
-            right: -4,
-            child: _BlurBlob(
-              size: 184,
-              colors: [Color(0xFFFFE7A6), Color(0xFFFFD696)],
-              opacity: 0.88,
-            ),
-          ),
-          Positioned(
-            top: 126,
-            left: -90,
-            child: _BlurBlob(
-              size: 228,
-              colors: [Color(0xFFD7CEF9), Color(0xFFC6DBFF)],
-              opacity: 0.48,
-            ),
-          ),
-          Positioned(
-            bottom: 136,
-            right: -58,
-            child: _BlurBlob(
-              size: 236,
-              colors: [Color(0xFFFFD9CF), Color(0xFFE5D7FF)],
-              opacity: 0.42,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _scheduleCollapseCard() {
+    _collapseTimer?.cancel();
+    _collapseTimer = Timer(_collapseDelay, () {
+      if (!mounted || _selectedIndex == null) return;
+      _dismissCard();
+    });
   }
-}
 
-class _BlurBlob extends StatelessWidget {
-  final double size;
-  final List<Color> colors;
-  final double opacity;
+  void _cancelCollapseCard() {
+    _collapseTimer?.cancel();
+    _collapseTimer = null;
+  }
 
-  const _BlurBlob({
-    required this.size,
-    required this.colors,
-    required this.opacity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Opacity(
-        opacity: opacity,
-        child: ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 34, sigmaY: 34),
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(colors: colors),
-            ),
-          ),
-        ),
-      ),
-    );
+  void _dismissCard() {
+    _cancelCollapseCard();
+    if (!mounted || _selectedIndex == null) return;
+    setState(() {
+      _selectedIndex = null;
+    });
   }
 }
 
@@ -575,6 +524,9 @@ class _CourseInfoCard extends StatelessWidget {
     final buttonColors = lesson.locked
         ? const [Color(0xFFE0DCE8), Color(0xFFD1CBDC)]
         : lesson.colors;
+    final accentShadow = lesson.locked
+        ? const Color(0xFFCFC9D8)
+        : lesson.colors.first;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
@@ -603,14 +555,21 @@ class _CourseInfoCard extends StatelessWidget {
               color: Colors.white.withOpacity(0.60),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: Colors.white.withOpacity(0.74),
+                color: Colors.white.withOpacity(0.78),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF36415F).withOpacity(0.12),
+                  color: const Color(0xFF323954).withOpacity(0.07),
+                  blurRadius: 36,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 18),
+                ),
+                BoxShadow(
+                  color: accentShadow.withOpacity(0.12),
                   blurRadius: 28,
-                  offset: const Offset(0, 12),
+                  spreadRadius: 1,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
@@ -1695,50 +1654,39 @@ class _NodePedestalPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final skew = size.width * 0.18;
-    final topSlabHeight = size.height * 0.24;
-    final bodyTop = size.height * 0.30;
-    final slabGap = size.height * 0.06;
-
-    final slabTopFace = Path()
+    final topFaceHeight = size.height * 0.30;
+    final baseBottom = size.height;
+    final topFace = Path()
       ..moveTo(skew, 0)
       ..lineTo(size.width, 0)
-      ..lineTo(size.width - skew, topSlabHeight)
-      ..lineTo(0, topSlabHeight)
-      ..close();
-    final slabFrontFace = Path()
-      ..moveTo(0, topSlabHeight)
-      ..lineTo(size.width - skew, topSlabHeight)
-      ..lineTo(size.width - skew, topSlabHeight + slabGap)
-      ..lineTo(0, topSlabHeight + slabGap)
-      ..close();
-    final topFace = Path()
-      ..moveTo(skew, bodyTop)
-      ..lineTo(size.width, bodyTop)
-      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
-      ..lineTo(0, bodyTop + size.height * 0.22)
+      ..lineTo(size.width - skew, topFaceHeight)
+      ..lineTo(0, topFaceHeight)
       ..close();
     final frontFace = Path()
-      ..moveTo(0, bodyTop + size.height * 0.22)
-      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
-      ..lineTo(size.width - skew, size.height)
-      ..lineTo(0, size.height)
+      ..moveTo(0, topFaceHeight)
+      ..lineTo(size.width - skew, topFaceHeight)
+      ..lineTo(size.width - skew, baseBottom)
+      ..lineTo(0, baseBottom)
       ..close();
     final sideFace = Path()
-      ..moveTo(size.width, bodyTop)
-      ..lineTo(size.width - skew, bodyTop + size.height * 0.22)
-      ..lineTo(size.width - skew, size.height)
-      ..lineTo(size.width, size.height * 0.78)
+      ..moveTo(size.width, 0)
+      ..lineTo(size.width - skew, topFaceHeight)
+      ..lineTo(size.width - skew, baseBottom)
+      ..lineTo(size.width, size.height * 0.72)
       ..close();
 
     canvas.drawShadow(frontFace, const Color(0x162E3557), 12, false);
-    canvas.drawPath(slabTopFace, Paint()..color = Colors.white.withOpacity(0.94));
-    canvas.drawPath(
-      slabFrontFace,
-      Paint()..color = topColor.withOpacity(0.84),
-    );
     canvas.drawPath(topFace, Paint()..color = topColor);
     canvas.drawPath(frontFace, Paint()..color = frontColor);
     canvas.drawPath(sideFace, Paint()..color = sideColor);
+    canvas.drawLine(
+      Offset(skew + 10, 8),
+      Offset(size.width - 18, 8),
+      Paint()
+        ..color = Colors.white.withOpacity(0.46)
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
   }
 
   @override
@@ -1776,47 +1724,51 @@ class _CourseScenePainter extends CustomPainter {
     _drawStairRibbon(canvas, const Offset(510, 512), const Offset(360, 794));
     _drawStairRibbon(canvas, const Offset(334, 1112), const Offset(258, 1458));
 
-    _drawPlatform(
+    _drawGhostArch(
       canvas,
-      rect: const Rect.fromLTWH(42, 152, 176, 82),
-      top: const Color(0xFFF8E7DA),
-      front: const Color(0xFFF4CFBC),
-      side: const Color(0xFFF09479),
+      rect: const Rect.fromLTWH(18, 208, 152, 266),
+      opacity: 0.12,
+      angle: -0.18,
     );
-    _drawPlatform(
+    _drawSupportCapsule(
       canvas,
-      rect: const Rect.fromLTWH(454, 392, 168, 88),
-      top: const Color(0xFFFFF4D3),
-      front: const Color(0xFFF4DF8E),
-      side: const Color(0xFFECCB50),
+      rect: const Rect.fromLTWH(608, 84, 94, 246),
+      color: const Color(0xFF9BD7EA),
+      opacity: 0.20,
     );
-    _drawPlatform(
+    _drawSupportCapsule(
       canvas,
-      rect: const Rect.fromLTWH(256, 786, 176, 92),
-      top: const Color(0xFFF8E9D7),
-      front: const Color(0xFFE0D5F2),
-      side: const Color(0xFFBCAFE0),
+      rect: const Rect.fromLTWH(582, 1130, 86, 238),
+      color: const Color(0xFFF1C8C3),
+      opacity: 0.16,
     );
-    _drawPlatform(
+    _drawSupportCapsule(
       canvas,
-      rect: const Rect.fromLTWH(128, 1058, 166, 88),
-      top: const Color(0xFFF7E8D8),
-      front: const Color(0xFFD8D0EE),
-      side: const Color(0xFFBAB2DB),
+      rect: const Rect.fromLTWH(36, 1276, 62, 156),
+      color: const Color(0xFF91DDF2),
+      opacity: 0.24,
     );
+
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(490, 1288, 166, 88),
+      rect: const Rect.fromLTWH(346, 620, 112, 56),
       top: const Color(0xFFF9E8D8),
-      front: const Color(0xFFF0D2CF),
-      side: const Color(0xFFD78882),
+      front: const Color(0xFFE7DDF3),
+      side: const Color(0xFFB9AEDC),
     );
     _drawPlatform(
       canvas,
-      rect: const Rect.fromLTWH(36, 1494, 182, 96),
-      top: const Color(0xFFF0ECE5),
-      front: const Color(0xFF9C9792),
-      side: const Color(0xFF72706E),
+      rect: const Rect.fromLTWH(516, 936, 118, 58),
+      top: const Color(0xFFF8E7DA),
+      front: const Color(0xFFF0D4CF),
+      side: const Color(0xFFD68E89),
+    );
+    _drawPlatform(
+      canvas,
+      rect: const Rect.fromLTWH(308, 1366, 122, 60),
+      top: const Color(0xFFF6EAD9),
+      front: const Color(0xFFE1D7EF),
+      side: const Color(0xFFBBAFDA),
     );
 
     final sparklePaint = Paint()
@@ -1878,6 +1830,52 @@ class _CourseScenePainter extends CustomPainter {
     for (final point in points) {
       canvas.drawCircle(point, 1.6, dot);
     }
+  }
+
+  void _drawGhostArch(
+    Canvas canvas, {
+    required Rect rect,
+    required double opacity,
+    required double angle,
+  }) {
+    canvas.save();
+    canvas.translate(rect.center.dx, rect.center.dy);
+    canvas.rotate(angle);
+    canvas.translate(-rect.center.dx, -rect.center.dy);
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(
+        rect,
+        topLeft: const Radius.circular(52),
+        topRight: const Radius.circular(52),
+        bottomLeft: const Radius.circular(24),
+        bottomRight: const Radius.circular(24),
+      ),
+      Paint()
+        ..color = Colors.white.withOpacity(opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6,
+    );
+    canvas.restore();
+  }
+
+  void _drawSupportCapsule(
+    Canvas canvas, {
+    required Rect rect,
+    required Color color,
+    required double opacity,
+  }) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(rect.width * 0.46)),
+      Paint()..color = color.withOpacity(opacity),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(rect.center.dx, rect.top + rect.height * 0.32),
+        width: rect.width * 0.56,
+        height: rect.width * 0.56,
+      ),
+      Paint()..color = Colors.white.withOpacity(opacity * 0.7),
+    );
   }
 
   void _drawPlatform(

@@ -264,62 +264,84 @@ class MonumentWorldBackground extends StatelessWidget {
         Positioned(
           top: 56,
           right: MediaQuery.of(context).size.width * 0.12,
-          child: Container(
-            width: 92,
-            height: 92,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                center: Alignment(-0.3, -0.3),
-                radius: 0.9,
-                colors: [
-                  Color(0xFFFFF9E8),
-                  Color(0xFFF6D9A1),
-                  Color(0x33F6D9A1),
-                ],
+          child: Opacity(
+            opacity: 0.34,
+            child: Container(
+              width: 92,
+              height: 92,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  center: Alignment(-0.3, -0.3),
+                  radius: 0.9,
+                  colors: [
+                    Color(0xFFFFF9E8),
+                    Color(0xFFF6D9A1),
+                    Color(0x33F6D9A1),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        const Positioned(left: 50, top: 150, child: DecorativeArch()),
+        const Positioned(
+          left: 50,
+          top: 150,
+          child: Opacity(
+            opacity: 0.18,
+            child: DecorativeArch(),
+          ),
+        ),
         const Positioned(
           left: 25,
           bottom: 110,
-          child: DecorativeTower(
-            width: 120,
-            height: 280,
-            colors: [Color(0xFFF8D0C4), Color(0xFFD8999E)],
-            angle: -0.18,
+          child: Opacity(
+            opacity: 0.20,
+            child: DecorativeTower(
+              width: 120,
+              height: 280,
+              colors: [Color(0xFFF8D0C4), Color(0xFFD8999E)],
+              angle: -0.18,
+            ),
           ),
         ),
         const Positioned(
           right: 34,
           bottom: 85,
-          child: DecorativeTower(
-            width: 150,
-            height: 220,
-            colors: [Color(0xFFB9DCE7), Color(0xFF84AFBD)],
-            angle: 0.16,
+          child: Opacity(
+            opacity: 0.18,
+            child: DecorativeTower(
+              width: 150,
+              height: 220,
+              colors: [Color(0xFFB9DCE7), Color(0xFF84AFBD)],
+              angle: 0.16,
+            ),
           ),
         ),
         const Positioned(
           left: 60,
           bottom: 150,
-          child: DecorativeStep(
-            width: 160,
-            height: 22,
-            color: Color(0xFFF6E8DA),
-            angle: -0.15,
+          child: Opacity(
+            opacity: 0.16,
+            child: DecorativeStep(
+              width: 160,
+              height: 22,
+              color: Color(0xFFF6E8DA),
+              angle: -0.15,
+            ),
           ),
         ),
         const Positioned(
           right: 70,
           bottom: 190,
-          child: DecorativeStep(
-            width: 120,
-            height: 18,
-            color: Color(0xFFFFF2D3),
-            angle: 0.21,
+          child: Opacity(
+            opacity: 0.16,
+            child: DecorativeStep(
+              width: 120,
+              height: 18,
+              color: Color(0xFFFFF2D3),
+              angle: 0.21,
+            ),
           ),
         ),
       ],
