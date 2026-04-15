@@ -5,8 +5,11 @@ import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import 'src/camera/embedded_camera_preview.dart';
 
 // ─── CV 识别阶段 ────────────────────────────────────────────────────────────
 enum CVPhase { idle, scanning, detecting, matched }
@@ -109,6 +112,18 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
     return '$hh:$mm';
   }
 
+  void openCameraPreviewPage() {
+    setState(() {
+      cameraStarted = false;
+      modeText = '相机预览';
+      recognitionText = '相机预览已改为当前页面内嵌显示。';
+      confidenceText = '--';
+      feedbackText =
+          '当前会先保证相机预览稳定，再逐步切换到原生识别。';
+    });
+    _changeTab(2);
+  }
+
   void mockRecognize() {
     final item = samples[math.Random().nextInt(samples.length)];
     setState(() {
@@ -126,8 +141,6 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       modeText = '镜头已开启';
       recognitionText = '镜头准备就绪：点击"模拟识别"查看教学反馈';
       confidenceText = 'Live';
-      feedbackText =
-      '后续可接入 camera / google_mlkit_pose_detection / MediaPipe Hands 做真实识别。';
     });
     _changeTab(2);
   }
@@ -218,7 +231,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
                                       confidenceText: confidenceText,
                                       feedbackText: feedbackText,
                                       cameraStarted: cameraStarted,
-                                      onStartCamera: startCamera,
+                                      onStartCamera: openCameraPreviewPage,
                                       onMockRecognize: mockRecognize,
                                       onTabChanged: _changeTab,
                                     ),
@@ -1331,41 +1344,12 @@ class PracticeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SectionTitle(
-                        title: 'CV 手势识别 Demo',
+                        title: '',
+                        // title: 'CV 手势识别 Demo',
                         trailing: '前端模拟版',
                         compact: true,
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '这里先用 Flutter 做一个手机端演示。接入真实 CV 时，可以换成 camera + MediaPipe Hands / ML Kit / 后端识别接口。',
-                        style: mutedStyle,
-                      ),
-                      const SizedBox(height: 14),
-                      CameraDemoBox(
-                        cameraStarted: cameraStarted,
-                        recognitionText: recognitionText,
-                        confidenceText: confidenceText,
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GradientButton(
-                              label: '开始镜头',
-                              onTap: onStartCamera,
-                              primary: true,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: GradientButton(
-                              label: '模拟识别',
-                              onTap: onMockRecognize,
-                              primary: false,
-                            ),
-                          ),
-                        ],
-                      ),
+                      const EmbeddedCameraPreview(),
                     ],
                   ),
                 ),
@@ -1758,59 +1742,66 @@ const List<List<int>> _kHandConnections = [
   [5,9],[9,13],[13,17],          // palm arch
 ];
 
-// ─── 手部骨架 CustomPainter ───────────────────────────────────────────────
+// ─── 通用骨架 Painter（支持任意点数 + 自定义连线）────────────────────────
 class HandSkeletonPainter extends CustomPainter {
-  final List<Offset> landmarks; // 已映射到像素坐标
+  final List<Offset> landmarks;    // 已映射到像素坐标
+  final List<List<int>> connections; // 骨骼连接对
   final double opacity;
   final Color jointColor;
   final Color boneColor;
+  final List<int> tipIndices;      // 指尖/末端点，画大一点
 
   HandSkeletonPainter({
     required this.landmarks,
+    required this.connections,
     required this.opacity,
     this.jointColor = const Color(0xFF4FC3F7),
     this.boneColor  = const Color(0xFF81D4FA),
+    this.tipIndices = const [],
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     if (landmarks.isEmpty) return;
 
-    // 骨骼线
     final bonePaint = Paint()
       ..color = boneColor.withOpacity(opacity * 0.80)
-      ..strokeWidth = 2.2
+      ..strokeWidth = 2.8
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    for (final conn in _kHandConnections) {
-      canvas.drawLine(landmarks[conn[0]], landmarks[conn[1]], bonePaint);
+    // 骨骼线（过滤掉越界的索引）
+    for (final conn in connections) {
+      if (conn[0] < landmarks.length && conn[1] < landmarks.length) {
+        canvas.drawLine(landmarks[conn[0]], landmarks[conn[1]], bonePaint);
+      }
     }
 
-    // 关键点圆
+    // 关键点
     for (int i = 0; i < landmarks.length; i++) {
-      final isTip = [4, 8, 12, 16, 20].contains(i);
-      final r = isTip ? 5.0 : 3.5;
-
+      final isTip = tipIndices.contains(i);
+      final r = isTip ? 6.0 : 4.0;
       canvas.drawCircle(
-        landmarks[i],
-        r + 2,
-        Paint()..color = Colors.white.withOpacity(opacity * 0.40),
+        landmarks[i], r + 2.5,
+        Paint()..color = Colors.white.withOpacity(opacity * 0.35),
       );
       canvas.drawCircle(
-        landmarks[i],
-        r,
+        landmarks[i], r,
         Paint()..color = jointColor.withOpacity(opacity),
       );
     }
   }
 
   @override
-  @override
   bool shouldRepaint(covariant HandSkeletonPainter old) =>
       old.opacity != opacity || old.landmarks != landmarks;
 }
 
+// ─── 真实 Pose 骨架 Painter（上半身 6 点：两肩、两肘、两腕）─────────────
+// 索引顺序与 _startImageStream 中的 keyLandmarks 列表一致：
+//   0=leftShoulder  1=rightShoulder
+//   2=leftElbow     3=rightElbow
+//   4=leftWrist     5=rightWrist
 // ─── 扫描线 Painter ────────────────────────────────────────────────────────
 class ScanLinePainter extends CustomPainter {
   final double progress; // 0~1 from top to bottom
@@ -1924,6 +1915,14 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
   bool _cameraReady = false;
   String? _cameraError;
 
+  // ── MediaPipe Hands Platform Channel ────────────────────────────────────
+  static const _methodCh = MethodChannel('hand_landmarker/method');
+  static const _eventCh = EventChannel('hand_landmarker/events');
+  StreamSubscription? _landmarkSub;
+  bool _isDetecting = false;
+  // 真实检测到的手部关键点（归一化坐标 0~1，21点）
+  List<Offset> _realLandmarks = [];
+
   @override
   void initState() {
     super.initState();
@@ -1989,7 +1988,7 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
       cam,
       ResolutionPreset.medium,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.jpeg,
+      imageFormatGroup: ImageFormatGroup.nv21, // Android 必须用 nv21 才能喂给 ML Kit
     );
 
     try {
@@ -2007,8 +2006,68 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
       _cameraError = null;
     });
 
-    // 开启 CV 流程
+    // 先连接 MediaPipe Hands WebSocket 服务器，再开启图像流
+    await _initMediaPipe();
+    _startImageStream(ctrl, cam);
     _startCVFlow();
+  }
+
+  // ── 初始化 MediaPipe Hands（设备端推理）────────────────────────────────
+  Future<void> _initMediaPipe() async {
+    await _methodCh.invokeMethod('init');
+    _landmarkSub = _eventCh.receiveBroadcastStream().listen(
+      (data) {
+        if (!mounted) return;
+        final rawList = data as List<dynamic>;
+        if (rawList.isEmpty) {
+          if (_realLandmarks.isNotEmpty) {
+            setState(() {
+              _realLandmarks = [];
+              if (_phase == CVPhase.detecting) _phase = CVPhase.scanning;
+            });
+          }
+        } else {
+          final pts = rawList.map((lm) {
+            final coords = lm as List<dynamic>;
+            return Offset(
+              (coords[0] as num).toDouble(),
+              (coords[1] as num).toDouble(),
+            );
+          }).toList();
+          setState(() {
+            _realLandmarks = pts;
+            if (_phase == CVPhase.idle || _phase == CVPhase.scanning) {
+              _phase = CVPhase.detecting;
+            }
+          });
+        }
+      },
+      onError: (_) {
+        if (mounted) setState(() => _realLandmarks = []);
+      },
+    );
+  }
+
+  // ── 逐帧发送 NV21 给原生 MediaPipe ──────────────────────────────────────
+  void _startImageStream(CameraController ctrl, CameraDescription cam) {
+    ctrl.startImageStream((CameraImage image) async {
+      if (_isDetecting || !mounted) return;
+      _isDetecting = true;
+      try {
+        final WriteBuffer buf = WriteBuffer();
+        for (final Plane plane in image.planes) {
+          buf.putUint8List(plane.bytes);
+        }
+        await _methodCh.invokeMethod('detect', {
+          'bytes': buf.done().buffer.asUint8List(),
+          'width': image.width,
+          'height': image.height,
+        });
+      } catch (_) {
+      } finally {
+        _isDetecting = false;
+      }
+    });
   }
 
   void _buildLandmarks([double jitter = 0]) {
@@ -2071,6 +2130,8 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
     _confCtrl.dispose();
     _phaseTimer?.cancel();
     _cameraController?.dispose();
+    _landmarkSub?.cancel();
+    _methodCh.invokeMethod('dispose');
     super.dispose();
   }
 
@@ -2093,8 +2154,18 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
   }
 
   List<Offset> _mapLandmarks(Size boxSize) {
+    // 优先使用真实 ML Kit 检测到的关节点
+    if (_realLandmarks.isNotEmpty) {
+      return _realLandmarks.map((p) {
+        // 真实坐标已是归一化 0~1，直接映射到 box 大小
+        // 前置摄像头已经被镜像（Transform.scale scaleX:-1），x 坐标也要翻转
+        final x = (1.0 - p.dx) * boxSize.width;
+        final y = p.dy * boxSize.height;
+        return Offset(x.clamp(0.0, boxSize.width), y.clamp(0.0, boxSize.height));
+      }).toList();
+    }
+    // 回退：使用静态 21 点 fake 骨架
     if (_landmarks.isEmpty) _buildLandmarks();
-    // 将归一化坐标映射到 box 内的一个居中区域
     const padH = 0.12, padV = 0.08;
     return _landmarks.map((p) {
       final x = (padH + p.dx * (1 - padH * 2)) * boxSize.width;
@@ -2105,8 +2176,10 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
 
   @override
   Widget build(BuildContext context) {
-    final bool showSkeleton =
-        _phase == CVPhase.detecting || _phase == CVPhase.matched;
+    // 有真实关节点时立刻显示，不依赖 phase timer
+    final bool showRealSkeleton = _realLandmarks.isNotEmpty && _cameraReady;
+    final bool showFakeSkeleton = !showRealSkeleton &&
+        (_phase == CVPhase.detecting || _phase == CVPhase.matched);
     final bool showScan =
         _phase == CVPhase.scanning || _phase == CVPhase.detecting;
 
@@ -2208,8 +2281,21 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
                         ),
                       ),
 
-                    // 手部骨架
-                    if (showSkeleton)
+                    // ── 真实手部关键点骨架（来自 MediaPipe HandLandmarkDetector，21点）──
+                    if (showRealSkeleton)
+                      CustomPaint(
+                        painter: HandSkeletonPainter(
+                          landmarks: mappedLandmarks,
+                          connections: _kHandConnections,
+                          opacity: 0.95,
+                          jointColor: const Color(0xFF4FC3F7),
+                          boneColor: const Color(0xFF81D4FA),
+                          tipIndices: const [4, 8, 12, 16, 20], // 5个指尖
+                        ),
+                      ),
+
+                    // ── 假骨架（无摄像头时的演示动画）───────────────────────
+                    if (showFakeSkeleton)
                       AnimatedBuilder(
                         animation: _jitterCtrl,
                         builder: (_, _) {
@@ -2223,6 +2309,7 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
                           return CustomPaint(
                             painter: HandSkeletonPainter(
                               landmarks: jitteredLandmarks,
+                              connections: _kHandConnections,
                               opacity: _phase == CVPhase.matched ? 0.92 : 0.72,
                               jointColor: _phase == CVPhase.matched
                                   ? const Color(0xFF81C784)
@@ -2230,6 +2317,7 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
                               boneColor: _phase == CVPhase.matched
                                   ? const Color(0xFFA5D6A7)
                                   : const Color(0xFF81D4FA),
+                              tipIndices: const [4, 8, 12, 16, 20],
                             ),
                           );
                         },
@@ -2246,14 +2334,31 @@ class _CameraDemoBoxState extends State<CameraDemoBox>
                       ),
                     ),
 
-                    // idle 时显示手部剪影提示
+                    // idle 时显示图标+文字提示（已移除假手势图）
                     if (_phase == CVPhase.idle)
                       Center(
                         child: AnimatedBuilder(
                           animation: _pulseCtrl,
                           builder: (_, _) => Opacity(
-                            opacity: 0.20 + _pulseCtrl.value * 0.15,
-                            child: const CameraHandArt(),
+                            opacity: 0.45 + _pulseCtrl.value * 0.30,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.pan_tool_outlined,
+                                    size: 52, color: Color(0xFF4FC3F7)),
+                                SizedBox(height: 10),
+                                Text(
+                                  '将手放入取景框\n开始识别',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF81D4FA),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.6,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -2848,6 +2953,9 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (title.isEmpty || title == 'CV 手势识别 Demo') {
+      return const SizedBox.shrink();
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
