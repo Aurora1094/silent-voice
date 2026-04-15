@@ -9,7 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'src/course_map/monument_course_map_screen.dart';
 import 'src/camera/embedded_camera_preview.dart';
+import 'src/home/immersive_home_screen.dart';
 
 // ─── CV 识别阶段 ────────────────────────────────────────────────────────────
 enum CVPhase { idle, scanning, detecting, matched }
@@ -19,6 +21,16 @@ List<CameraDescription> _cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
   try {
     _cameras = await availableCameras();
   } catch (_) {
@@ -157,6 +169,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -173,80 +186,54 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
         child: Stack(
           children: [
             const Positioned.fill(child: MonumentWorldBackground()),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: LayoutBuilder(
-                  builder: (context, viewport) {
-                    return Center(
-                      child: SizedBox(
-                        width: math.min(420.0, viewport.maxWidth),
-                        height: viewport.maxHeight,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(38),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.16),
-                                borderRadius: BorderRadius.circular(38),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.35),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF2E3557).withOpacity(0.22),
-                                    blurRadius: 65,
-                                    offset: const Offset(0, 25),
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  16,
-                                  16,
-                                  16,
-                                ),
-                                child: PageView(
-                                  controller: _pageController,
-                                  physics: const ClampingScrollPhysics(),
-                                  onPageChanged: (index) {
-                                    setState(() => currentIndex = index);
-                                  },
-                                  children: [
-                                    HomeScreen(
-                                      timeText: timeText,
-                                      onPracticeTap: () => _changeTab(2),
-                                      onLessonsTap: () => _changeTab(1),
-                                      onStoryTap: () => _changeTab(3),
-                                    ),
-                                    LessonsScreen(
-                                      onTabChanged: _changeTab,
-                                    ),
-                                    PracticeScreen(
-                                      modeText: modeText,
-                                      recognitionText: recognitionText,
-                                      confidenceText: confidenceText,
-                                      feedbackText: feedbackText,
-                                      cameraStarted: cameraStarted,
-                                      onStartCamera: openCameraPreviewPage,
-                                      onMockRecognize: mockRecognize,
-                                      onTabChanged: _changeTab,
-                                    ),
-                                    StoryScreen(onTabChanged: _changeTab),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+            PageView(
+              controller: _pageController,
+              physics: const ClampingScrollPhysics(),
+              onPageChanged: (index) {
+                setState(() => currentIndex = index);
+              },
+              children: [
+                ImmersiveHomeScreen(
+                  onPracticeTap: () => _changeTab(2),
+                  onLessonsTap: () => _changeTab(1),
+                  onStoryTap: () => _changeTab(3),
+                  bottomNav: BottomNav(currentIndex: 0, onChanged: (v) {
+                    if (v == 1) _changeTab(1);
+                    if (v == 2) _changeTab(2);
+                    if (v == 3) _changeTab(3);
+                  }),
                 ),
-              ),
+                MonumentCourseMapScreen(
+                  onTabChanged: _changeTab,
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    MediaQuery.viewPaddingOf(context).top + 12,
+                    16,
+                    MediaQuery.viewPaddingOf(context).bottom + 10,
+                  ),
+                  child: PracticeScreen(
+                    modeText: modeText,
+                    recognitionText: recognitionText,
+                    confidenceText: confidenceText,
+                    feedbackText: feedbackText,
+                    cameraStarted: cameraStarted,
+                    onStartCamera: openCameraPreviewPage,
+                    onMockRecognize: mockRecognize,
+                    onTabChanged: _changeTab,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    MediaQuery.viewPaddingOf(context).top + 12,
+                    16,
+                    MediaQuery.viewPaddingOf(context).bottom + 10,
+                  ),
+                  child: StoryScreen(onTabChanged: _changeTab),
+                ),
+              ],
             ),
           ],
         ),
@@ -3034,61 +3021,80 @@ class BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const items = [
-      ('🏠', '首页'),
-      ('🗺️', '课程'),
-      ('📸', '练习'),
-      ('💬', '故事'),
+      (Icons.home_rounded, '首页'),
+      (Icons.map_outlined, '课程'),
+      (Icons.center_focus_strong_rounded, '练习'),
+      (Icons.chat_bubble_outline_rounded, '故事'),
     ];
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: Colors.white.withOpacity(0.45),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2E3557).withOpacity(0.08),
-            blurRadius: 30,
-            offset: const Offset(0, -8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: List.generate(items.length, (index) {
-          final active = currentIndex == index;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(index),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  color: active
-                      ? Colors.white.withOpacity(0.72)
-                      : Colors.transparent,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(items[index].$1, style: const TextStyle(fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Text(
-                      items[index].$2,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight:
-                        active ? FontWeight.w700 : FontWeight.w500,
-                        color: active
-                            ? const Color(0xFF2E3557)
-                            : const Color(0xFF5F678F),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 10, 8, 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: Colors.white.withOpacity(0.34),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.58),
+              width: 1,
             ),
-          );
-        }),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2E3557).withOpacity(0.08),
+                blurRadius: 30,
+                offset: const Offset(0, -8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: List.generate(items.length, (index) {
+              final active = currentIndex == index;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onChanged(index),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      color: active
+                          ? Colors.white.withOpacity(0.54)
+                          : Colors.transparent,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          items[index].$1,
+                          size: 22,
+                          color: active
+                              ? const Color(0xFF2E3557)
+                              : const Color(0xFF5F678F),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          items[index].$2,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                active ? FontWeight.w700 : FontWeight.w500,
+                            color: active
+                                ? const Color(0xFF2E3557)
+                                : const Color(0xFF5F678F),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
