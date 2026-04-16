@@ -39,6 +39,39 @@ class CourseMapLesson {
 
   bool get locked => state == CourseMapLessonState.locked;
   bool get current => state == CourseMapLessonState.current;
+  bool get completed => state == CourseMapLessonState.completed;
+
+  CourseMapLesson copyWith({
+    String? chapter,
+    String? title,
+    String? subtitle,
+    String? duration,
+    String? description,
+    IconData? icon,
+    String? progressLabel,
+    String? difficulty,
+    double? progressValue,
+    List<Color>? colors,
+    double? xAlign,
+    double? top,
+    CourseMapLessonState? state,
+  }) {
+    return CourseMapLesson(
+      chapter: chapter ?? this.chapter,
+      title: title ?? this.title,
+      subtitle: subtitle ?? this.subtitle,
+      duration: duration ?? this.duration,
+      description: description ?? this.description,
+      icon: icon ?? this.icon,
+      progressLabel: progressLabel ?? this.progressLabel,
+      difficulty: difficulty ?? this.difficulty,
+      progressValue: progressValue ?? this.progressValue,
+      colors: colors ?? this.colors,
+      xAlign: xAlign ?? this.xAlign,
+      top: top ?? this.top,
+      state: state ?? this.state,
+    );
+  }
 
   String get stateLabel {
     switch (state) {
@@ -148,11 +181,15 @@ const List<CourseMapLesson> courseMapLessons = [
 ];
 
 class MonumentCourseMapScreen extends StatefulWidget {
+  final List<CourseMapLesson> lessons;
   final ValueChanged<int> onTabChanged;
+  final ValueChanged<int> onStartLesson;
 
   const MonumentCourseMapScreen({
     super.key,
+    required this.lessons,
     required this.onTabChanged,
+    required this.onStartLesson,
   });
 
   @override
@@ -188,16 +225,19 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 
   @override
   Widget build(BuildContext context) {
+    final courseMapLessons = widget.lessons;
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final completedCount = courseMapLessons
-        .where((lesson) => lesson.state == CourseMapLessonState.completed)
-        .length;
-    final currentLesson = courseMapLessons.firstWhere(
-      (lesson) => lesson.state == CourseMapLessonState.current,
-      orElse: () => courseMapLessons.first,
+    final completedCount =
+        widget.lessons.where((lesson) => lesson.completed).length;
+    final currentLesson = widget.lessons.firstWhere(
+      (lesson) => lesson.current,
+      orElse: () => widget.lessons.lastWhere(
+        (lesson) => !lesson.locked,
+        orElse: () => widget.lessons.first,
+      ),
     );
     final selectedLesson =
-        _selectedIndex == null ? null : courseMapLessons[_selectedIndex!];
+        _selectedIndex == null ? null : widget.lessons[_selectedIndex!];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -245,7 +285,7 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                                 Positioned.fill(
                                   child: CustomPaint(
                                     painter: _CourseScenePainter(
-                                      lessons: courseMapLessons,
+                                      lessons: widget.lessons,
                                     ),
                                   ),
                                 ),
@@ -286,12 +326,12 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                                     painter: _PrimaryBridgeOverlayPainter(),
                                   ),
                                 ),
-                                for (var i = 0; i < courseMapLessons.length; i++)
+                                for (var i = 0; i < widget.lessons.length; i++)
                                   Positioned(
-                                    left: (_mapWidth * courseMapLessons[i].xAlign) - 68,
-                                    top: courseMapLessons[i].top,
+                                    left: (_mapWidth * widget.lessons[i].xAlign) - 68,
+                                    top: widget.lessons[i].top,
                                     child: _CourseMapNode(
-                                    lesson: courseMapLessons[i],
+                                    lesson: widget.lessons[i],
                                     selected: _selectedIndex == i,
                                     onTap: () {
                                       _cancelCollapseCard();
@@ -336,6 +376,7 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
               child: _CourseSummaryHeader(
                 currentLesson: currentLesson,
                 completedCount: completedCount,
+                totalCount: courseMapLessons.length,
               ),
             ),
             Positioned(
@@ -393,7 +434,12 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                         : TapRegion(
                             key: ValueKey(selectedLesson.title),
                             onTapOutside: (_) => _dismissCard(),
-                            child: _CourseInfoCard(lesson: selectedLesson),
+                            child: _CourseInfoCard(
+                              lesson: selectedLesson,
+                              onStartTap: selectedLesson.locked
+                                  ? null
+                                  : () => widget.onStartLesson(_selectedIndex!),
+                            ),
                           ),
                   ),
                 ),
@@ -439,15 +485,17 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 class _CourseSummaryHeader extends StatelessWidget {
   final CourseMapLesson currentLesson;
   final int completedCount;
+  final int totalCount;
 
   const _CourseSummaryHeader({
     required this.currentLesson,
     required this.completedCount,
+    required this.totalCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    final progress = completedCount / courseMapLessons.length;
+    final progress = totalCount == 0 ? 0.0 : completedCount / totalCount;
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: BackdropFilter(
@@ -519,9 +567,11 @@ class _CourseSummaryHeader extends StatelessWidget {
 
 class _CourseInfoCard extends StatelessWidget {
   final CourseMapLesson lesson;
+  final VoidCallback? onStartTap;
 
   const _CourseInfoCard({
     required this.lesson,
+    required this.onStartTap,
   });
 
   @override
@@ -699,7 +749,7 @@ class _CourseInfoCard extends StatelessWidget {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(22),
-                      onTap: () {},
+                      onTap: onStartTap,
                       child: Center(
                         child: Text(
                           lesson.locked

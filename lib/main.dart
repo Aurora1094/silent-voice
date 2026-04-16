@@ -69,6 +69,8 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
   late PageController _pageController;
   late Timer _timer;
   String timeText = _formatTime(DateTime.now());
+  late List<bool> _completedLessons;
+  int _practiceLessonIndex = 0;
 
   final List<RecognitionSample> samples = const [
     RecognitionSample(
@@ -100,15 +102,50 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
   String feedbackText =
       '当前建议：保持手掌完整进入取景框，放慢动作速度，先对齐“你好”的起始姿态。';
 
+  final Map<String, RecognitionSample> _sampleByWord = const {
+    '你好': RecognitionSample(
+      word: '你好',
+      confidence: '94%',
+      feedback: '识别通过，问候动作已经稳定，可以进入下一课。',
+    ),
+    '谢谢': RecognitionSample(
+      word: '谢谢',
+      confidence: '91%',
+      feedback: '识别通过，送出的方向和节奏已经对了。',
+    ),
+    '我': RecognitionSample(
+      word: '我',
+      confidence: '88%',
+      feedback: '识别通过，自我指向动作已经清楚。',
+    ),
+    '喜欢': RecognitionSample(
+      word: '喜欢',
+      confidence: '96%',
+      feedback: '识别通过，情绪表达已经更自然了。',
+    ),
+    '你还好吗': RecognitionSample(
+      word: '你还好吗',
+      confidence: '92%',
+      feedback: '识别通过，完整问句已经连起来了。',
+    ),
+    '一起练习': RecognitionSample(
+      word: '一起练习',
+      confidence: '95%',
+      feedback: '识别通过，本章动作已经全部完成。',
+    ),
+  };
+
   @override
   void initState() {
     super.initState();
+    _completedLessons = List<bool>.filled(courseMapLessons.length, false);
     _pageController = PageController(initialPage: currentIndex);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         timeText = _formatTime(DateTime.now());
       });
     });
+    _syncPracticeCopy();
   }
 
   @override
@@ -122,6 +159,124 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
     final hh = time.hour.toString().padLeft(2, '0');
     final mm = time.minute.toString().padLeft(2, '0');
     return '$hh:$mm';
+  }
+
+  int? get _currentLessonIndex {
+    final index = _completedLessons.indexWhere((done) => !done);
+    return index == -1 ? null : index;
+  }
+
+  List<CourseMapLesson> get _runtimeLessons {
+    final currentIndex = _currentLessonIndex;
+    return List.generate(courseMapLessons.length, (index) {
+      final template = courseMapLessons[index];
+      final completed = _completedLessons[index];
+      final state = completed
+          ? CourseMapLessonState.completed
+          : currentIndex == null
+              ? CourseMapLessonState.completed
+              : index == currentIndex
+                  ? CourseMapLessonState.current
+                  : CourseMapLessonState.locked;
+
+      return template.copyWith(
+        state: state,
+        progressValue: completed ? 1 : 0,
+        progressLabel: completed
+            ? '已掌握'
+            : index == currentIndex
+                ? '当前学习'
+                : '按顺序解锁',
+      );
+    });
+  }
+
+  RecognitionSample _sampleForWord(String word) {
+    return _sampleByWord[word] ??
+        RecognitionSample(
+          word: word,
+          confidence: '90%',
+          feedback: '识别通过，动作语义已经命中。',
+        );
+  }
+
+  void _syncPracticeCopy() {
+    final lessons = _runtimeLessons;
+    final safeIndex = _practiceLessonIndex.clamp(0, lessons.length - 1);
+    final activeLesson = lessons[safeIndex];
+    final currentIndex = _currentLessonIndex;
+    final completedCount = _completedLessons.where((done) => done).length;
+
+    modeText = currentIndex == null ? '本章完成' : '顺序解锁中';
+    recognitionText = '当前目标：${activeLesson.title}';
+    confidenceText = '$completedCount/${lessons.length}';
+
+    if (activeLesson.locked) {
+      feedbackText = '这节动作还未解锁，请先完成前一课的语义识别。';
+    } else if (activeLesson.completed) {
+      feedbackText = '这节动作已经掌握，可以复习，或回到课程地图继续下一课。';
+    } else {
+      feedbackText =
+          '请先完成“${activeLesson.title}”的动作语义识别。识别成功后会自动解锁下一课。';
+    }
+  }
+
+  void _openPracticeForLesson(int index) {
+    setState(() {
+      _practiceLessonIndex = index;
+      _syncPracticeCopy();
+    });
+    _changeTab(2);
+  }
+
+  void _openPracticeCameraFlow() {
+    setState(() {
+      cameraStarted = true;
+      modeText = '实时识别';
+      feedbackText = '镜头已就绪，对准当前目标动作后可点击“模拟识别当前动作”。';
+    });
+    _changeTab(2);
+  }
+
+  void _simulateRecognitionForCurrentLesson() {
+    final lessons = _runtimeLessons;
+    final activeIndex = _practiceLessonIndex.clamp(0, lessons.length - 1);
+    final activeLesson = lessons[activeIndex];
+    final item = _sampleForWord(activeLesson.title);
+    final currentIndex = _currentLessonIndex;
+
+    setState(() {
+      if (activeLesson.locked) {
+        modeText = '未解锁';
+        feedbackText = '这节还没有解锁，请先完成前一课。';
+      } else if (currentIndex == activeIndex) {
+        _completedLessons[activeIndex] = true;
+        final nextIndex = _currentLessonIndex;
+        recognitionText = '识别结果：${item.word}';
+        confidenceText = item.confidence;
+        if (nextIndex == null) {
+          modeText = '本章完成';
+          feedbackText = '识别通过，全部动作已经按顺序解锁完成。';
+        } else {
+          _practiceLessonIndex = nextIndex;
+          modeText = '已解锁下一课';
+          feedbackText = '${item.feedback} 已解锁“${_runtimeLessons[nextIndex].title}”。';
+        }
+      } else if (_completedLessons[activeIndex]) {
+        modeText = '复习模式';
+        feedbackText = '${activeLesson.title} 已经掌握，可以回到课程地图继续下一课。';
+        recognitionText = '识别结果：${item.word}';
+        confidenceText = item.confidence;
+      } else {
+        modeText = '顺序解锁';
+        feedbackText = currentIndex == null
+            ? '本章已经完成。'
+            : '请先完成当前解锁动作“${lessons[currentIndex].title}”。';
+        recognitionText = '识别结果：${item.word}';
+        confidenceText = item.confidence;
+      }
+    });
+    _changeTab(2);
   }
 
   void openCameraPreviewPage() {
@@ -168,6 +323,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
 
   @override
   Widget build(BuildContext context) {
+    final lessons = _runtimeLessons;
     return Scaffold(
       extendBody: true,
       body: Container(
@@ -194,7 +350,9 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
               },
               children: [
                 ImmersiveHomeScreen(
-                  onPracticeTap: () => _changeTab(2),
+                  lessons: lessons,
+                  onPracticeTap: () =>
+                      _openPracticeForLesson(_currentLessonIndex ?? 0),
                   onLessonsTap: () => _changeTab(1),
                   onStoryTap: () => _changeTab(3),
                   bottomNav: BottomNav(currentIndex: 0, onChanged: (v) {
@@ -204,7 +362,9 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
                   }),
                 ),
                 MonumentCourseMapScreen(
+                  lessons: lessons,
                   onTabChanged: _changeTab,
+                  onStartLesson: _openPracticeForLesson,
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -219,8 +379,8 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
                     confidenceText: confidenceText,
                     feedbackText: feedbackText,
                     cameraStarted: cameraStarted,
-                    onStartCamera: openCameraPreviewPage,
-                    onMockRecognize: mockRecognize,
+                    onStartCamera: _openPracticeCameraFlow,
+                    onMockRecognize: _simulateRecognitionForCurrentLesson,
                     onTabChanged: _changeTab,
                   ),
                 ),
@@ -1312,6 +1472,291 @@ class _MiniTowerDecoration extends StatelessWidget {
   }
 }
 
+class _PracticeScreenExpanded extends StatelessWidget {
+  final CourseMapLesson activeLesson;
+  final int completedCount;
+  final int totalCount;
+  final String modeText;
+  final String recognitionText;
+  final String confidenceText;
+  final String feedbackText;
+  final bool cameraStarted;
+  final VoidCallback onStartCamera;
+  final VoidCallback onMockRecognize;
+  final VoidCallback onOpenCourseMap;
+  final ValueChanged<int> onTabChanged;
+
+  const _PracticeScreenExpanded({
+    super.key,
+    required this.activeLesson,
+    required this.completedCount,
+    required this.totalCount,
+    required this.modeText,
+    required this.recognitionText,
+    required this.confidenceText,
+    required this.feedbackText,
+    required this.cameraStarted,
+    required this.onStartCamera,
+    required this.onMockRecognize,
+    required this.onOpenCourseMap,
+    required this.onTabChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = totalCount == 0 ? 0.0 : completedCount / totalCount;
+    final accent = activeLesson.locked
+        ? const Color(0xFFD8D1E3)
+        : activeLesson.colors.first;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TopBar(leadingText: '实时练习', trailing: SoftPill(text: modeText)),
+        const SizedBox(height: 14),
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FrostCard(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '当前练习',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: const Color(0xFF5F678F).withOpacity(0.92),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  activeLesson.title,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF2E3557),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  activeLesson.subtitle,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF5F678F),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: accent.withOpacity(activeLesson.locked ? 0.45 : 0.88),
+                            ),
+                            child: Icon(
+                              activeLesson.locked
+                                  ? Icons.lock_outline_rounded
+                                  : activeLesson.icon,
+                              color: const Color(0xFF44506C),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: Colors.white.withOpacity(0.72),
+                        ),
+                        child: Text(
+                          activeLesson.locked
+                              ? '按课程顺序解锁'
+                              : activeLesson.progressLabel,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF5F678F),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '已完成 $completedCount / $totalCount 节',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF5F678F),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${(progress * 100).round()}%',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2E3557),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor: Colors.white.withOpacity(0.50),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFFFC8B7),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        activeLesson.description,
+                        style: mutedStyle,
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GradientButton(
+                              label: '开始相机练习',
+                              onTap: onStartCamera,
+                              primary: false,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: GradientButton(
+                              label: activeLesson.locked
+                                  ? '等待解锁'
+                                  : activeLesson.completed
+                                      ? '复习当前动作'
+                                      : '识别当前动作',
+                              onTap: onMockRecognize,
+                              primary: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: GradientButton(
+                          label: '返回课程地图',
+                          onTap: onOpenCourseMap,
+                          primary: false,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FrostCard(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionTitle(
+                        title: '',
+                        // title: 'CV 手势识别 Demo',
+                        trailing: cameraStarted ? '镜头已启动' : '前端模拟版',
+                        compact: true,
+                      ),
+                      const EmbeddedCameraPreview(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FrostCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SectionTitle(
+                        title: '识别结果',
+                        trailing: '动作语义反馈',
+                        compact: true,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        recognitionText,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2E3557),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '识别置信度：$confidenceText',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF7A85A3),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(feedbackText, style: mutedStyle),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const FrostCard(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionTitle(
+                        title: '可扩展的真实功能',
+                        trailing: '适合比赛答辩',
+                        compact: true,
+                      ),
+                      SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          TagChip(text: '关键点骨架可视化'),
+                          TagChip(text: '错误动作纠正'),
+                          TagChip(text: '慢动作分解教学'),
+                          TagChip(text: '跟练评分'),
+                          TagChip(text: '家长/老师端报告'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+            ),
+          ),
+        ),
+        BottomNav(currentIndex: 2, onChanged: onTabChanged),
+      ],
+    );
+  }
+}
+
 class PracticeScreen extends StatelessWidget {
   final String modeText;
   final String recognitionText;
@@ -1351,14 +1796,13 @@ class PracticeScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SectionTitle(
+                    children: const [
+                      SectionTitle(
                         title: '',
-                        // title: 'CV 手势识别 Demo',
                         trailing: '前端模拟版',
                         compact: true,
                       ),
-                      const EmbeddedCameraPreview(),
+                      EmbeddedCameraPreview(),
                     ],
                   ),
                 ),

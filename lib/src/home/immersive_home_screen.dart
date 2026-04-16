@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../course_map/monument_course_map_screen.dart';
 
 class ImmersiveHomeScreen extends StatelessWidget {
+  final List<CourseMapLesson> lessons;
   final VoidCallback onPracticeTap;
   final VoidCallback onLessonsTap;
   final VoidCallback onStoryTap;
@@ -12,6 +13,7 @@ class ImmersiveHomeScreen extends StatelessWidget {
 
   const ImmersiveHomeScreen({
     super.key,
+    required this.lessons,
     required this.onPracticeTap,
     required this.onLessonsTap,
     required this.onStoryTap,
@@ -21,7 +23,7 @@ class ImmersiveHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewPadding = MediaQuery.viewPaddingOf(context);
-    final progress = _LearningProgress.fromLessons(courseMapLessons);
+    final progress = _LearningProgress.fromLessons(lessons);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -178,10 +180,17 @@ class _LearningProgress {
     final unlockedCount = lessons.where((lesson) => !lesson.locked).length;
     final currentLesson = lessons.firstWhere(
       (lesson) => lesson.current,
-      orElse: () => lessons.first,
+      orElse: () => lessons.lastWhere(
+        (lesson) => !lesson.locked,
+        orElse: () => lessons.first,
+      ),
     );
     final nextLesson = lessons.cast<CourseMapLesson?>().firstWhere(
-          (lesson) => lesson?.state == CourseMapLessonState.upcoming,
+          (lesson) =>
+              lesson != null &&
+              lesson.state != CourseMapLessonState.completed &&
+              !lesson.current &&
+              !lesson.locked,
           orElse: () => null,
         );
 
