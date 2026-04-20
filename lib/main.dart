@@ -74,39 +74,49 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
 
   final List<RecognitionSample> samples = const [
     RecognitionSample(
-      word: '你好',
+      word: '我',
       confidence: '94%',
-      feedback: '识别良好：摆动方向正确，可以再把手掌抬高一点，效果会更稳定。',
+      feedback: '识别良好：指向自身的动作很清楚，落点也比较稳定。',
+    ),
+    RecognitionSample(
+      word: '爱',
+      confidence: '91%',
+      feedback: '胸前动作已经连贯起来，情绪表达也更自然了。',
+    ),
+    RecognitionSample(
+      word: '南',
+      confidence: '88%',
+      feedback: '方向动作已经比较明确，再把转向做得更果断一点会更好。',
+    ),
+    RecognitionSample(
+      word: '开',
+      confidence: '96%',
+      feedback: '展开动作很清楚，开合节奏已经做出来了。',
+    ),
+    RecognitionSample(
+      word: '大学',
+      confidence: '93%',
+      feedback: '组合词汇的连接已经比较顺，整体语义表达很完整。',
+    ),
+    RecognitionSample(
+      word: '你好',
+      confidence: '90%',
+      feedback: '问候动作稳定自然，起手位置和节奏都比较准确。',
     ),
     RecognitionSample(
       word: '谢谢',
-      confidence: '91%',
-      feedback: '动作路径基本正确，建议从下巴前方更自然地向外送出。',
-    ),
-    RecognitionSample(
-      word: '喜欢',
-      confidence: '88%',
-      feedback: '胸口定位不错，下一步可以减小动作幅度，让表达更自然。',
-    ),
-    RecognitionSample(
-      word: '我',
-      confidence: '96%',
-      feedback: '动作清晰，镜头取景稳定，已经可以进入短句练习。',
-    ),
-    RecognitionSample(
-      word: '请',
-      confidence: '93%',
-      feedback: '邀请动作的前送方向稳定，停顿也更自然了。',
-    ),
-    RecognitionSample(
-      word: '没关系',
-      confidence: '90%',
-      feedback: '安抚语气表达准确，整体节奏已经柔和下来。',
-    ),
-    RecognitionSample(
-      word: '一起',
       confidence: '92%',
-      feedback: '共同表达的方向关系清楚，连接动作更顺了。',
+      feedback: '感谢动作的送出方向已经对了，节奏也很舒服。',
+    ),
+    RecognitionSample(
+      word: '不',
+      confidence: '91%',
+      feedback: '否定动作干净利落，表达边界已经很清楚了。',
+    ),
+    RecognitionSample(
+      word: '没有',
+      confidence: '93%',
+      feedback: '语义延展很自然，缺失表达已经能稳定做出来。',
     ),
     RecognitionSample(
       word: '再见',
@@ -123,55 +133,55 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       '当前建议：保持手掌完整进入取景框，放慢动作速度，先对齐“你好”的起始姿态。';
 
   final Map<String, RecognitionSample> _sampleByWord = const {
+    '我': RecognitionSample(
+      word: '我',
+      confidence: '94%',
+      feedback: '识别通过，自我指向动作已经很稳定。',
+    ),
+    '爱': RecognitionSample(
+      word: '爱',
+      confidence: '91%',
+      feedback: '识别通过，情感表达已经更自然了。',
+    ),
+    '南': RecognitionSample(
+      word: '南',
+      confidence: '88%',
+      feedback: '识别通过，方向表达已经清楚。',
+    ),
+    '开': RecognitionSample(
+      word: '开',
+      confidence: '96%',
+      feedback: '识别通过，展开动作已经完整连贯。',
+    ),
+    '大学': RecognitionSample(
+      word: '大学',
+      confidence: '92%',
+      feedback: '识别通过，组合词汇已经顺利连起来了。',
+    ),
     '你好': RecognitionSample(
       word: '你好',
-      confidence: '94%',
-      feedback: '识别通过，问候动作已经稳定，可以进入下一课。',
+      confidence: '93%',
+      feedback: '识别通过，问候动作已经稳定自然。',
     ),
     '谢谢': RecognitionSample(
       word: '谢谢',
-      confidence: '91%',
-      feedback: '识别通过，送出的方向和节奏已经对了。',
-    ),
-    '我': RecognitionSample(
-      word: '我',
-      confidence: '88%',
-      feedback: '识别通过，自我指向动作已经清楚。',
-    ),
-    '喜欢': RecognitionSample(
-      word: '喜欢',
-      confidence: '96%',
-      feedback: '识别通过，情绪表达已经更自然了。',
-    ),
-    '你还好吗': RecognitionSample(
-      word: '你还好吗',
-      confidence: '92%',
-      feedback: '识别通过，完整问句已经连起来了。',
-    ),
-    '请': RecognitionSample(
-      word: '请',
-      confidence: '93%',
-      feedback: '识别通过，邀请动作的前送和停顿已经配合起来了。',
-    ),
-    '没关系': RecognitionSample(
-      word: '没关系',
       confidence: '90%',
-      feedback: '识别通过，安抚回应的节奏已经更柔和了。',
+      feedback: '识别通过，感谢动作的方向和节奏已经对了。',
     ),
-    '一起': RecognitionSample(
-      word: '一起',
+    '不': RecognitionSample(
+      word: '不',
       confidence: '92%',
-      feedback: '识别通过，共同表达的方向关系已经清楚。',
+      feedback: '识别通过，否定动作已经干净利落。',
+    ),
+    '没有': RecognitionSample(
+      word: '没有',
+      confidence: '93%',
+      feedback: '识别通过，缺失表达已经很完整了。',
     ),
     '再见': RecognitionSample(
       word: '再见',
       confidence: '95%',
       feedback: '识别通过，告别动作已经收得很自然。',
-    ),
-    '一起练习': RecognitionSample(
-      word: '一起练习',
-      confidence: '95%',
-      feedback: '识别通过，本章动作已经全部完成。',
     ),
   };
 

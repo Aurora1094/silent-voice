@@ -90,131 +90,131 @@ class CourseMapLesson {
 const List<CourseMapLesson> courseMapLessons = [
   CourseMapLesson(
     chapter: '第一章',
-    title: '你好',
-    subtitle: '基础问候',
+    title: '我',
+    subtitle: '自我指向',
     duration: '06 min',
-    description: '从手掌朝向和节奏开始，建立最自然的问候表达。',
-    icon: Icons.front_hand_rounded,
+    description: '从指向自身的动作开始，建立最基础的人称表达。',
+    icon: Icons.person_rounded,
     progressLabel: '起始课程',
     difficulty: '入门',
     progressValue: 1,
-    colors: [Color(0xFFF7C7B6), Color(0xFFFFE8DB)],
+    colors: [Color(0xFF8CD6C2), Color(0xFFD8F4E9)],
     xAlign: 0.16,
     top: 148,
-    state: CourseMapLessonState.completed,
-  ),
-  CourseMapLesson(
-    chapter: '第一章',
-    title: '谢谢',
-    subtitle: '礼貌回应',
-    duration: '08 min',
-    description: '练习从下巴前方轻柔送出的轨迹，让动作更稳定。',
-    icon: Icons.favorite_outline_rounded,
-    progressLabel: '发音与节奏',
-    difficulty: '入门',
-    progressValue: 1,
-    colors: [Color(0xFFF5D770), Color(0xFFFFF2C9)],
-    xAlign: 0.70,
-    top: 358,
-    state: CourseMapLessonState.completed,
-  ),
-  CourseMapLesson(
-    chapter: '第一章',
-    title: '我',
-    subtitle: '自我表达',
-    duration: '07 min',
-    description: '认识指向自身的表达方式，避免角度漂移和抖动。',
-    icon: Icons.person_rounded,
-    progressLabel: '当前学习',
-    difficulty: '基础',
-    progressValue: 0.62,
-    colors: [Color(0xFF8CD6C2), Color(0xFFD8F4E9)],
-    xAlign: 0.46,
-    top: 760,
     state: CourseMapLessonState.current,
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '喜欢',
-    subtitle: '情绪表达',
+    title: '爱',
+    subtitle: '情感表达',
+    duration: '08 min',
+    description: '把胸前动作和情绪感受联系起来，让表达更自然。',
+    icon: Icons.favorite_outline_rounded,
+    progressLabel: '发音与节奏',
+    difficulty: '入门',
+    progressValue: 1,
+    colors: [Color(0xFFF7C9CB), Color(0xFFFFE6E8)],
+    xAlign: 0.70,
+    top: 358,
+    state: CourseMapLessonState.upcoming,
+  ),
+  CourseMapLesson(
+    chapter: '第一章',
+    title: '南',
+    subtitle: '方向方位',
+    duration: '07 min',
+    description: '练习方向类手势的落点和转向，建立空间感知。',
+    icon: Icons.explore_rounded,
+    progressLabel: '当前学习',
+    difficulty: '基础',
+    progressValue: 0.62,
+    colors: [Color(0xFFCFE5FF), Color(0xFFEAF4FF)],
+    xAlign: 0.46,
+    top: 760,
+    state: CourseMapLessonState.upcoming,
+  ),
+  CourseMapLesson(
+    chapter: '第一章',
+    title: '开',
+    subtitle: '动作展开',
     duration: '09 min',
-    description: '把动作与表情联系起来，让表达更自然、更完整。',
-    icon: Icons.star_rounded,
+    description: '练习张开的轨迹和停顿，让手势结构更清晰完整。',
+    icon: Icons.pan_tool_alt_rounded,
     progressLabel: '下一节',
     difficulty: '基础',
     progressValue: 0.12,
-    colors: [Color(0xFFD8CCF6), Color(0xFFF0E8FF)],
+    colors: [Color(0xFFF7D4AE), Color(0xFFFFEBD9)],
     xAlign: 0.30,
     top: 1030,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '你还好吗',
-    subtitle: '关怀句式',
+    title: '大学',
+    subtitle: '场景词汇',
     duration: '10 min',
-    description: '把基础词汇连接成完整问句，进入更真实的交流语境。',
-    icon: Icons.chat_bubble_outline_rounded,
+    description: '把组合词汇连成完整概念，进入更具体的校园语境。',
+    icon: Icons.school_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0.05,
-    colors: [Color(0xFFF7C9CB), Color(0xFFFFE6E8)],
+    colors: [Color(0xFFD8CCF6), Color(0xFFF0E8FF)],
     xAlign: 0.73,
     top: 1260,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '请',
-    subtitle: '礼貌邀请',
+    title: '你好',
+    subtitle: '基础问候',
     duration: '07 min',
-    description: '练习手掌前送与停顿节奏，让邀请语气更清楚、更柔和。',
-    icon: Icons.pan_tool_alt_rounded,
+    description: '回到常用问候动作，练习节奏和起手位置的稳定性。',
+    icon: Icons.front_hand_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0.04,
-    colors: [Color(0xFFCFE5FF), Color(0xFFEAF4FF)],
+    colors: [Color(0xFFF7C7B6), Color(0xFFFFE8DB)],
     xAlign: 0.54,
     top: 1568,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '没关系',
-    subtitle: '安慰回应',
+    title: '谢谢',
+    subtitle: '礼貌回应',
     duration: '09 min',
-    description: '把安抚语气和舒缓动作结合起来，让回应更有陪伴感。',
-    icon: Icons.spa_rounded,
+    description: '练习从下巴前方送出的轨迹，让感谢表达更稳定柔和。',
+    icon: Icons.favorite_outline_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0.03,
-    colors: [Color(0xFFDDE9B5), Color(0xFFF3F8DA)],
+    colors: [Color(0xFFF5D770), Color(0xFFFFF2C9)],
     xAlign: 0.18,
     top: 1818,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '一起',
-    subtitle: '协同表达',
+    title: '不',
+    subtitle: '否定表达',
     duration: '08 min',
-    description: '练习共同动作的指向关系，把单人表达过渡到双人语境。',
-    icon: Icons.groups_rounded,
+    description: '学习简洁明确的否定动作，让表达更有边界感和节奏。',
+    icon: Icons.close_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0.03,
-    colors: [Color(0xFFF7D4AE), Color(0xFFFFEBD9)],
+    colors: [Color(0xFFDDE9B5), Color(0xFFF3F8DA)],
     xAlign: 0.68,
     top: 2058,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '再见',
-    subtitle: '结束告别',
+    title: '没有',
+    subtitle: '缺失表达',
     duration: '06 min',
-    description: '收束动作轨迹和视线方向，让告别表达自然落下，不显得生硬。',
-    icon: Icons.waving_hand_rounded,
+    description: '把否定延展成更完整的语义，让动作表达更加明确。',
+    icon: Icons.block_rounded,
     progressLabel: '可直接学习',
     difficulty: '基础',
     progressValue: 0.03,
@@ -225,11 +225,11 @@ const List<CourseMapLesson> courseMapLessons = [
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '一起练习',
-    subtitle: '章节综合',
+    title: '再见',
+    subtitle: '结束告别',
     duration: '12 min',
-    description: '把问候、关怀、邀请和告别串成一段完整表达，完成本章收束。',
-    icon: Icons.auto_awesome_rounded,
+    description: '收束动作轨迹和视线方向，让告别表达自然落下，完成本章收尾。',
+    icon: Icons.waving_hand_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0,
@@ -309,6 +309,7 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 
         return Stack(
           children: [
+            const Positioned.fill(child: _CourseMapAtmosphere()),
             Positioned.fill(
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
@@ -460,10 +461,24 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
               left: 20,
               right: 20,
               top: viewPadding.top + 64,
-              child: _CourseSummaryHeader(
-                currentLesson: currentLesson,
-                completedCount: completedCount,
-                totalCount: courseMapLessons.length,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _CourseSummaryHeader(
+                    currentLesson: currentLesson,
+                    completedCount: completedCount,
+                    totalCount: courseMapLessons.length,
+                  ),
+                  Positioned(
+                    right: 14,
+                    top: -12,
+                    child: _ChapterHaloBadge(
+                      lesson: currentLesson,
+                      completedCount: completedCount,
+                      totalCount: courseMapLessons.length,
+                    ),
+                  ),
+                ],
               ),
             ),
             Positioned(
@@ -526,8 +541,12 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                               onStartTap: selectedLesson.locked
                                   ? null
                                   : () {
-                                      _dismissCard();
-                                      widget.onStartLesson(_selectedIndex!);
+                                      final selectedIndex = _selectedIndex;
+                                      if (selectedIndex == null) return;
+                                      _openLearningDialog(
+                                        selectedIndex,
+                                        selectedLesson,
+                                      );
                                     },
                             ),
                           ),
@@ -569,6 +588,522 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
     setState(() {
       _selectedIndex = null;
     });
+  }
+
+  Future<void> _openLearningDialog(int index, CourseMapLesson lesson) async {
+    widget.onStartLesson(index);
+    _dismissCard();
+    if (!mounted) return;
+
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'lesson-learning-dialog',
+      barrierColor: Colors.black.withOpacity(0.20),
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  color: Colors.white.withOpacity(0.04),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
+                  child: _LearningDialogShell(lesson: lesson),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.06),
+              end: Offset.zero,
+            ).animate(curved),
+            child: ScaleTransition(
+              scale: Tween<double>(
+                begin: 0.96,
+                end: 1,
+              ).animate(curved),
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LearningDialogShell extends StatelessWidget {
+  final CourseMapLesson lesson;
+
+  const _LearningDialogShell({
+    required this.lesson,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: 440,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(34),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.84),
+                  lesson.colors.last.withOpacity(0.54),
+                  lesson.colors.first.withOpacity(0.24),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(34),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.82),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2E3557).withOpacity(0.14),
+                  blurRadius: 34,
+                  offset: const Offset(0, 18),
+                ),
+                BoxShadow(
+                  color: lesson.colors.first.withOpacity(0.18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color: Colors.white.withOpacity(0.76),
+                      ),
+                      child: const Text(
+                        '开始学习',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF5B6684),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.68),
+                        foregroundColor: const Color(0xFF53607D),
+                      ),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  lesson.title,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF2C3553),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${lesson.chapter} · ${lesson.subtitle}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF667290),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        lesson.colors.last.withOpacity(0.82),
+                        lesson.colors.first.withOpacity(0.48),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.72),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.74),
+                        ),
+                        child: Icon(
+                          lesson.icon,
+                          size: 30,
+                          color: const Color(0xFF52607B),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        '浮窗主体已预留',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF32405C),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '这里先作为课程“${lesson.title}”的学习浮窗页面，后续你告诉我需要放哪些内容，我再继续填进去。',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.55,
+                          color: const Color(0xFF53627E).withOpacity(0.94),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _LearningDialogMetric(
+                        label: '课程',
+                        value: lesson.title,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _LearningDialogMetric(
+                        label: '状态',
+                        value: lesson.stateLabel,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _LearningDialogMetric(
+                        label: '时长',
+                        value: lesson.duration,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF2F3A59),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                    ),
+                    child: const Text('关闭浮窗'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LearningDialogMetric extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _LearningDialogMetric({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withOpacity(0.56),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF7B86A1),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF31405C),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CourseMapAtmosphere extends StatelessWidget {
+  const _CourseMapAtmosphere();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Stack(
+        children: const [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x30FFF7EA),
+                    Color(0x0AFFFFFF),
+                    Color(0x12EDE7FF),
+                    Color(0x1ADFF1FF),
+                  ],
+                  stops: [0.0, 0.26, 0.62, 1.0],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -122,
+            left: -94,
+            child: _AtmosphereBlob(
+              size: 286,
+              colors: [Color(0xFFFFEFC3), Color(0xFFFFD6C7)],
+              opacity: 0.34,
+            ),
+          ),
+          Positioned(
+            top: 142,
+            right: -58,
+            child: _AtmosphereBlob(
+              size: 246,
+              colors: [Color(0xFFD6E6FF), Color(0xFFEFE7FF)],
+              opacity: 0.26,
+            ),
+          ),
+          Positioned(
+            bottom: 138,
+            left: -42,
+            child: _AtmosphereBlob(
+              size: 228,
+              colors: [Color(0xFFFFE2D4), Color(0xFFF6E8FF)],
+              opacity: 0.22,
+            ),
+          ),
+          Positioned(
+            top: 104,
+            left: 30,
+            child: _AtmosphereBeam(
+              width: 84,
+              height: 186,
+              colors: [Color(0x6EFFFFFF), Color(0x16FFFFFF)],
+            ),
+          ),
+          Positioned(
+            bottom: 112,
+            right: 30,
+            child: _AtmosphereBeam(
+              width: 96,
+              height: 248,
+              colors: [Color(0x56D8EDFF), Color(0x12FFFFFF)],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AtmosphereBlob extends StatelessWidget {
+  final double size;
+  final List<Color> colors;
+  final double opacity;
+
+  const _AtmosphereBlob({
+    required this.size,
+    required this.colors,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            colors.first.withOpacity(opacity),
+            colors.last.withOpacity(opacity * 0.72),
+            colors.last.withOpacity(0),
+          ],
+          stops: const [0.0, 0.54, 1.0],
+        ),
+      ),
+    );
+  }
+}
+
+class _AtmosphereBeam extends StatelessWidget {
+  final double width;
+  final double height;
+  final List<Color> colors;
+
+  const _AtmosphereBeam({
+    required this.width,
+    required this.height,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(width * 0.52),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: colors,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withOpacity(0.18),
+            blurRadius: 26,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChapterHaloBadge extends StatelessWidget {
+  final CourseMapLesson lesson;
+  final int completedCount;
+  final int totalCount;
+
+  const _ChapterHaloBadge({
+    required this.lesson,
+    required this.completedCount,
+    required this.totalCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 78,
+      height: 78,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.90),
+            lesson.colors.last.withOpacity(0.86),
+            lesson.colors.first.withOpacity(0.82),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.72),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: lesson.colors.first.withOpacity(0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            lesson.icon,
+            size: 20,
+            color: const Color(0xFF505A77),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$completedCount/$totalCount',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF2E3557),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1340,12 +1875,14 @@ class _CourseMapNodeState extends State<_CourseMapNode>
   }
 
   Color _nodeSideColor(CourseMapLesson lesson) {
-    if (lesson.title == '谢谢') return const Color(0xFFE9C852);
     if (lesson.title == '我') return const Color(0xFF83D2C7);
-    if (lesson.title == '你还好吗') return const Color(0xFFD88B8C);
-    if (lesson.title == '请') return const Color(0xFF8FB5E8);
-    if (lesson.title == '没关系') return const Color(0xFFBDCE74);
-    if (lesson.title == '一起') return const Color(0xFFF0B27D);
+    if (lesson.title == '爱') return const Color(0xFFD88B8C);
+    if (lesson.title == '南') return const Color(0xFF8FB5E8);
+    if (lesson.title == '开') return const Color(0xFFF0B27D);
+    if (lesson.title == '大学') return const Color(0xFFBDA6E0);
+    if (lesson.title == '谢谢') return const Color(0xFFE9C852);
+    if (lesson.title == '不') return const Color(0xFFBDCE74);
+    if (lesson.title == '没有') return const Color(0xFFD2A3D8);
     if (lesson.title == '再见') return const Color(0xFFD2A3D8);
     return const Color(0xFFF09B84);
   }
