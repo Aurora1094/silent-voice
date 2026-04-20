@@ -4,6 +4,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../camera/embedded_camera_preview.dart';
+
 enum CourseMapLessonState { completed, current, upcoming, locked }
 
 class CourseMapLesson {
@@ -568,14 +570,24 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
               ),
             ),
             SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  child: _LearningDialogShell(lesson: lesson),
-                ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final dialogMaxHeight = math.max(
+                    0.0,
+                    constraints.maxHeight - 28,
+                  );
+
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+                      child: _LearningDialogShell(
+                        lesson: lesson,
+                        maxHeight: dialogMaxHeight,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -610,23 +622,27 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 
 class _LearningDialogShell extends StatelessWidget {
   final CourseMapLesson lesson;
+  final double maxHeight;
 
   const _LearningDialogShell({
     required this.lesson,
+    required this.maxHeight,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(
-        maxWidth: 440,
-      ),
+    final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
+    final dialogHeight = math.min(maxHeight, 760.0);
+
+    return SizedBox(
+      width: 440,
+      height: dialogHeight,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(34),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+            padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -654,156 +670,71 @@ class _LearningDialogShell extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                fontFamily: fontFamily,
+                color: const Color(0xFF32405C),
+                decoration: TextDecoration.none,
+              ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(999),
-                        color: Colors.white.withOpacity(0.76),
-                      ),
-                      child: const Text(
-                        '开始学习',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF5B6684),
+                    Row(
+                      children: [
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.68),
+                            foregroundColor: const Color(0xFF53607D),
+                          ),
+                          icon: const Icon(Icons.close_rounded),
                         ),
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.68),
-                        foregroundColor: const Color(0xFF53607D),
-                      ),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  lesson.title,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2C3553),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${lesson.chapter} · ${lesson.subtitle}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF667290),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        lesson.colors.last.withOpacity(0.82),
-                        lesson.colors.first.withOpacity(0.48),
                       ],
                     ),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.72),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.74),
-                        ),
-                        child: Icon(
-                          lesson.icon,
-                          size: 30,
-                          color: const Color(0xFF52607B),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        '浮窗主体已预留',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF32405C),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '这里先作为课程“${lesson.title}”的学习浮窗页面，后续你告诉我需要放哪些内容，我再继续填进去。',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.55,
-                          color: const Color(0xFF53627E).withOpacity(0.94),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _LearningDialogMetric(
-                        label: '课程',
-                        value: lesson.title,
+                    const SizedBox(height: 8),
+                    Text(
+                      lesson.title,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF2C3553),
+                        fontFamily: fontFamily,
+                        decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _LearningDialogMetric(
-                        label: '状态',
-                        value: lesson.stateLabel,
+                    const SizedBox(height: 14),
+                    _LearningDialogSection(
+                      fontFamily: fontFamily,
+                      child: EmbeddedCameraPreview(
+                        targetLabel: lesson.title,
+                        compact: true,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _LearningDialogMetric(
-                        label: '时长',
-                        value: lesson.duration,
+                    const SizedBox(height: 14),
+                    _LearningDialogSection(
+                      fontFamily: fontFamily,
+                      title: '动作建议',
+                      child: _LearningDialogSuggestionPanel(
+                        lesson: lesson,
+                        fontFamily: fontFamily,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _LearningDialogSection(
+                      fontFamily: fontFamily,
+                      title: '手语示意图',
+                      child: _LearningDialogIllustrationPlaceholder(
+                        lesson: lesson,
+                        fontFamily: fontFamily,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2F3A59),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                    ),
-                    child: const Text('关闭浮窗'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -812,50 +743,228 @@ class _LearningDialogShell extends StatelessWidget {
   }
 }
 
-class _LearningDialogMetric extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _LearningDialogMetric({
-    required this.label,
-    required this.value,
+class _LearningDialogSection extends StatelessWidget {
+  const _LearningDialogSection({
+    this.title,
+    this.fontFamily,
+    required this.child,
   });
+
+  final String? title;
+  final String? fontFamily;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: Colors.white.withOpacity(0.56),
+        borderRadius: BorderRadius.circular(26),
+        color: Colors.white.withOpacity(0.54),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.60),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF7B86A1),
+          if (title != null) ...[
+            Text(
+              title!,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF32405C),
+                fontFamily: fontFamily,
+                decoration: TextDecoration.none,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF31405C),
-            ),
-          ),
+            const SizedBox(height: 12),
+          ],
+          child,
         ],
       ),
     );
+  }
+}
+
+class _LearningDialogIllustrationPlaceholder extends StatelessWidget {
+  const _LearningDialogIllustrationPlaceholder({
+    required this.lesson,
+    this.fontFamily,
+  });
+
+  final CourseMapLesson lesson;
+  final String? fontFamily;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF6F1EA),
+              Color(0xFFE5EBF4),
+            ],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.72),
+                    ),
+                    child: Icon(
+                      lesson.icon,
+                      size: 28,
+                      color: const Color(0xFF4B5877),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${lesson.title} 手语示意图',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF33415E),
+                      fontFamily: fontFamily,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LearningDialogSuggestionPanel extends StatelessWidget {
+  const _LearningDialogSuggestionPanel({
+    required this.lesson,
+    this.fontFamily,
+  });
+
+  final CourseMapLesson lesson;
+  final String? fontFamily;
+
+  @override
+  Widget build(BuildContext context) {
+    final suggestions = _suggestionsForLesson(lesson.title);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final suggestion in suggestions) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(top: 6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF8793AE),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  suggestion,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.55,
+                    color: const Color(0xFF4E5C79),
+                    fontFamily: fontFamily,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: Colors.white.withOpacity(0.58),
+          ),
+          child: Text(
+            '后续这里会接入 API 自动生成建议。',
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.5,
+              color: const Color(0xFF6A7694),
+              fontFamily: fontFamily,
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<String> _suggestionsForLesson(String title) {
+    switch (title) {
+      case '我':
+        return const [
+          '只保留食指伸出，其余手指尽量收紧，手放在胸前中线位置会更稳定。',
+          '动作不要太快，先把手形摆准，再保持半秒，让识别器更容易命中。',
+        ];
+      case '爱':
+        return const [
+          '一只手突出拇指，另一只手靠近配合，双手距离不要拉得太开。',
+          '先把双手关系摆准，再做轻微配合动作，别一开始就大幅度晃动。',
+        ];
+      case '南':
+        return const [
+          '四指尽量并拢朝下，拇指收一点，先让手形稳住再轻微下压。',
+          '如果总识别不出来，先把手放到画面中间偏上，别离镜头太近。',
+        ];
+      case '开':
+        return const [
+          '双手先并排准备好，再向两侧拉开，左右分离的轨迹尽量清楚。',
+          '动作做慢一点，先让系统看到起始位，再展开，会比直接甩开更稳。',
+        ];
+      case '你好':
+        return const [
+          '先做食指指向的起手，再切到拇指手形，两段动作中间不要连得太急。',
+          '如果容易识别成别的词，先把起手和结束手形都停顿一下。',
+        ];
+      case '谢谢':
+        return const [
+          '拇指手形从稍高位置向下送，幅度不需要太大，方向清楚更重要。',
+          '先让手停稳，再做下送动作，节奏太快时识别会更容易飘。',
+        ];
+      case '没有':
+        return const [
+          '先把拇指、食指、中指的捻合手形捏准，再做连续动作，不要一开始就快速抖动。',
+          '如果识别偏差大，可以先做一次慢速的捻合，再逐渐加快节奏。',
+        ];
+      default:
+        return const [
+          '先把手形摆对，再去做动作路径，通常会比一开始追求速度更容易识别。',
+          '尽量把手放在画面中间区域，避免贴边或离镜头太近。',
+        ];
+    }
   }
 }
 

@@ -22,7 +22,14 @@ enum _PreviewStatus {
 }
 
 class EmbeddedCameraPreview extends StatefulWidget {
-  const EmbeddedCameraPreview({super.key});
+  const EmbeddedCameraPreview({
+    super.key,
+    this.targetLabel,
+    this.compact = false,
+  });
+
+  final String? targetLabel;
+  final bool compact;
 
   @override
   State<EmbeddedCameraPreview> createState() => _EmbeddedCameraPreviewState();
@@ -44,10 +51,58 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
   bool _isRecognitionRunning = false;
   bool _cameraVisible = false;
 
+  bool get _hasTarget =>
+      widget.targetLabel != null && widget.targetLabel!.trim().isNotEmpty;
+
+  bool get _autoStart => widget.compact && _hasTarget;
+
+  bool _matchesTarget(HandSignResult? result) {
+    return _hasTarget &&
+        result != null &&
+        result.isStable &&
+        result.label == widget.targetLabel;
+  }
+
+  String get _readyMessage {
+    if (_hasTarget) {
+      return '相机已开启，对准“${widget.targetLabel}”后开始识别。';
+    }
+    return '相机已开启，可以开始识别。';
+  }
+
+  String get _runningMessage {
+    if (_hasTarget) {
+      return '正在识别“${widget.targetLabel}”这个动作。';
+    }
+    return '正在进行课程手势关键点识别。';
+  }
+
+  String get _resumeMessage {
+    if (_hasTarget) {
+      return '相机已恢复，可以继续识别“${widget.targetLabel}”。';
+    }
+    return '相机已恢复，可以继续练习。';
+  }
+
+  String get _stoppedMessage {
+    if (_hasTarget) {
+      return '相机已开启，可以继续识别“${widget.targetLabel}”。';
+    }
+    return '相机已开启，可以继续预览。';
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (_autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        unawaited(_ensureAutoStart());
+      });
+    }
   }
 
   @override
@@ -61,9 +116,25 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
     if (state == AppLifecycleState.resumed && mounted && _cameraVisible) {
       setState(() {
         _status = _PreviewStatus.ready;
-        _statusMessage = '相机已恢复，可以继续练习。';
+        _statusMessage = _resumeMessage;
       });
+      if (_autoStart && !_isRecognitionRunning) {
+        unawaited(_startRecognition());
+      }
     }
+  }
+
+  Future<void> _ensureAutoStart() async {
+    if (!mounted || !_autoStart) {
+      return;
+    }
+    if (!_cameraVisible) {
+      await _openCamera();
+    }
+    if (!mounted || !_cameraVisible || _isRecognitionRunning) {
+      return;
+    }
+    await _startRecognition();
   }
 
   Future<void> _openCamera() async {
@@ -88,7 +159,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
         case CameraStartStatus.ready:
           _cameraVisible = true;
           _status = _PreviewStatus.ready;
-          _statusMessage = '相机已开启，可以开始识别。';
+          _statusMessage = _readyMessage;
           break;
         case CameraStartStatus.permissionDenied:
           _status = _PreviewStatus.permissionDenied;
@@ -108,6 +179,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
           break;
       }
     });
+
   }
 
   Future<void> _startRecognition() async {
@@ -138,7 +210,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
       setState(() {
         _isRecognitionRunning = true;
         _latestSignResult = null;
-        _statusMessage = '正在进行课程手势关键点识别。';
+        _statusMessage = _runningMessage;
       });
     } catch (error) {
       if (!mounted) {
@@ -165,7 +237,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
       _latestRecognition = null;
       _latestSignResult = null;
       if (_cameraVisible) {
-        _statusMessage = '相机已开启，可以继续预览。';
+        _statusMessage = _stoppedMessage;
       }
     });
   }
@@ -176,9 +248,13 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
     }
 
     final signResult = _signRecognizer.process(result);
+    final matched = _matchesTarget(signResult);
     setState(() {
       _latestRecognition = result;
       _latestSignResult = signResult;
+      if (matched) {
+        _statusMessage = '识别成功：${widget.targetLabel}，本次已过关。';
+      }
     });
   }
 
@@ -212,51 +288,57 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
 
   @override
   Widget build(BuildContext context) {
+    final showInfoCard = !(widget.compact && _hasTarget);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPreviewCard(),
-        const SizedBox(height: 8),
-        _buildInfoCard(),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _ActionButton(
-                label: _cameraVisible ? '重新打开' : '打开摄像头',
-                onTap: _isInitializingCamera
-                    ? null
-                    : () {
-                        unawaited(_openCamera());
-                      },
-                primary: true,
+        if (showInfoCard) ...[
+          const SizedBox(height: 8),
+          _buildInfoCard(),
+        ],
+        if (!_autoStart) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _ActionButton(
+                  label: _cameraVisible ? '重新打开' : '打开摄像头',
+                  onTap: _isInitializingCamera
+                      ? null
+                      : () {
+                          unawaited(_openCamera());
+                        },
+                  primary: true,
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _ActionButton(
-                label: _isRecognitionRunning ? '停止识别' : '开始识别',
-                onTap: _cameraVisible
-                    ? () {
-                        if (_isRecognitionRunning) {
-                          unawaited(_stopRecognition());
-                        } else {
-                          unawaited(_startRecognition());
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ActionButton(
+                  label: _isRecognitionRunning ? '停止识别' : '开始识别',
+                  onTap: _cameraVisible
+                      ? () {
+                          if (_isRecognitionRunning) {
+                            unawaited(_stopRecognition());
+                          } else {
+                            unawaited(_startRecognition());
+                          }
                         }
-                      }
-                    : null,
-                primary: false,
+                      : null,
+                  primary: false,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildPreviewCard() {
     return Container(
-      height: 470,
+      height: widget.compact ? 280 : 470,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
         gradient: const LinearGradient(
@@ -285,9 +367,18 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
 
   Widget _buildLivePreview() {
     final signResult = _latestSignResult;
-    final previewText = signResult == null
-        ? '相机预览正常，可以开始识别。'
-        : '当前词义：${signResult.label}  置信度：${(signResult.confidence * 100).toStringAsFixed(0)}%';
+    final previewText = switch ((signResult, _hasTarget, widget.compact)) {
+      (null, true, true) => '目标：${widget.targetLabel}',
+      (_, true, true) when _matchesTarget(signResult) => '已过关',
+      (_, true, true) => '当前：${signResult!.label}',
+      (null, true, false) => '目标动作：${widget.targetLabel}，做对即可过关。',
+      (null, false, _) => '相机预览正常，可以开始识别。',
+      (_, true, false) when _matchesTarget(signResult) =>
+        '识别成功：${widget.targetLabel}，本次已过关。',
+      (_, true, false) =>
+        '当前识别：${signResult!.label}，继续调整到“${widget.targetLabel}”。',
+      (_, false, _) => '当前词义：${signResult!.label}  置信度：${(signResult.confidence * 100).toStringAsFixed(0)}%',
+    };
 
     return Stack(
       fit: StackFit.expand,
@@ -384,6 +475,14 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
   }
 
   Widget _buildInfoCard() {
+    if (widget.compact && _hasTarget) {
+      return const SizedBox.shrink();
+    }
+
+    if (_hasTarget) {
+      return _buildTargetInfoCard();
+    }
+
     final rawResult = _latestRecognition;
     final signResult = _latestSignResult;
     final handednessText = signResult == null || signResult.handedness.isEmpty
@@ -418,6 +517,114 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
             style: const TextStyle(fontSize: 12, color: Color(0xFF5F678F)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTargetInfoCard() {
+    final rawResult = _latestRecognition;
+    final signResult = _latestSignResult;
+    final matched = _matchesTarget(signResult);
+    final statusText = switch ((signResult, matched)) {
+      (_, true) => '已过关',
+      (null, _) => _isRecognitionRunning ? '识别中' : '待开始',
+      _ => '继续调整',
+    };
+    final statusColor = matched
+        ? const Color(0xFF3E8F68)
+        : _isRecognitionRunning
+            ? const Color(0xFFDA8A4A)
+            : const Color(0xFF6A7694);
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(12, widget.compact ? 8 : 10, 12, widget.compact ? 8 : 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withOpacity(0.72),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _TargetBadge(
+                label: '目标动作',
+                value: widget.targetLabel!,
+                color: const Color(0xFF4C5D86),
+              ),
+              _TargetBadge(
+                label: '当前状态',
+                value: statusText,
+                color: statusColor,
+              ),
+            ],
+          ),
+          if (!widget.compact) ...[
+            const SizedBox(height: 8),
+            Text(
+              signResult == null
+                  ? _statusMessage
+                  : matched
+                      ? '识别结果稳定命中“${widget.targetLabel}”，这次已经过关。'
+                      : '当前识别到“${signResult.label}”，继续调整到目标动作“${widget.targetLabel}”。',
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.5,
+                color: Color(0xFF5F678F),
+              ),
+            ),
+          ],
+          if (!widget.compact && (rawResult != null || signResult != null)) ...[
+            const SizedBox(height: 6),
+            Text(
+              '稳定：${signResult?.isStable == true ? '是' : '否'}  手数：${rawResult?.handCount ?? 0}  时间戳：${signResult?.timestamp ?? '--'}',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF7A86A3)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TargetBadge extends StatelessWidget {
+  const _TargetBadge({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: color.withOpacity(0.10),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(fontSize: 12, color: Color(0xFF5F678F)),
+          children: [
+            TextSpan(
+              text: '$label ',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextSpan(
+              text: value,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
