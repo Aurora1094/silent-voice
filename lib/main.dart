@@ -93,6 +93,26 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       confidence: '96%',
       feedback: '动作清晰，镜头取景稳定，已经可以进入短句练习。',
     ),
+    RecognitionSample(
+      word: '请',
+      confidence: '93%',
+      feedback: '邀请动作的前送方向稳定，停顿也更自然了。',
+    ),
+    RecognitionSample(
+      word: '没关系',
+      confidence: '90%',
+      feedback: '安抚语气表达准确，整体节奏已经柔和下来。',
+    ),
+    RecognitionSample(
+      word: '一起',
+      confidence: '92%',
+      feedback: '共同表达的方向关系清楚，连接动作更顺了。',
+    ),
+    RecognitionSample(
+      word: '再见',
+      confidence: '95%',
+      feedback: '收束动作很完整，告别的节奏已经出来了。',
+    ),
   ];
 
   bool cameraStarted = false;
@@ -127,6 +147,26 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       word: '你还好吗',
       confidence: '92%',
       feedback: '识别通过，完整问句已经连起来了。',
+    ),
+    '请': RecognitionSample(
+      word: '请',
+      confidence: '93%',
+      feedback: '识别通过，邀请动作的前送和停顿已经配合起来了。',
+    ),
+    '没关系': RecognitionSample(
+      word: '没关系',
+      confidence: '90%',
+      feedback: '识别通过，安抚回应的节奏已经更柔和了。',
+    ),
+    '一起': RecognitionSample(
+      word: '一起',
+      confidence: '92%',
+      feedback: '识别通过，共同表达的方向关系已经清楚。',
+    ),
+    '再见': RecognitionSample(
+      word: '再见',
+      confidence: '95%',
+      feedback: '识别通过，告别动作已经收得很自然。',
     ),
     '一起练习': RecognitionSample(
       word: '一起练习',
@@ -177,7 +217,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
               ? CourseMapLessonState.completed
               : index == currentIndex
                   ? CourseMapLessonState.current
-                  : CourseMapLessonState.locked;
+                  : CourseMapLessonState.upcoming;
 
       return template.copyWith(
         state: state,
@@ -186,7 +226,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
             ? '已掌握'
             : index == currentIndex
                 ? '当前学习'
-                : '按顺序解锁',
+                : '可直接学习',
       );
     });
   }
@@ -207,17 +247,14 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
     final currentIndex = _currentLessonIndex;
     final completedCount = _completedLessons.where((done) => done).length;
 
-    modeText = currentIndex == null ? '本章完成' : '顺序解锁中';
+    modeText = currentIndex == null ? '本章完成' : '自由练习';
     recognitionText = '当前目标：${activeLesson.title}';
     confidenceText = '$completedCount/${lessons.length}';
 
-    if (activeLesson.locked) {
-      feedbackText = '这节动作还未解锁，请先完成前一课的语义识别。';
-    } else if (activeLesson.completed) {
-      feedbackText = '这节动作已经掌握，可以复习，或回到课程地图继续下一课。';
+    if (activeLesson.completed) {
+      feedbackText = '这节动作已经掌握，可以复习，或回到课程地图继续其他课程。';
     } else {
-      feedbackText =
-          '请先完成“${activeLesson.title}”的动作语义识别。识别成功后会自动解锁下一课。';
+      feedbackText = '请完成“${activeLesson.title}”的动作语义识别。所有章节均已开放，可自由切换练习。';
     }
   }
 
@@ -227,6 +264,13 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       _syncPracticeCopy();
     });
     _changeTab(2);
+  }
+
+  void _preparePracticeForLesson(int index) {
+    setState(() {
+      _practiceLessonIndex = index;
+      _syncPracticeCopy();
+    });
   }
 
   void _openPracticeCameraFlow() {
@@ -243,37 +287,22 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
     final activeIndex = _practiceLessonIndex.clamp(0, lessons.length - 1);
     final activeLesson = lessons[activeIndex];
     final item = _sampleForWord(activeLesson.title);
-    final currentIndex = _currentLessonIndex;
+    final wasCompleted = _completedLessons[activeIndex];
 
     setState(() {
-      if (activeLesson.locked) {
-        modeText = '未解锁';
-        feedbackText = '这节还没有解锁，请先完成前一课。';
-      } else if (currentIndex == activeIndex) {
-        _completedLessons[activeIndex] = true;
-        final nextIndex = _currentLessonIndex;
-        recognitionText = '识别结果：${item.word}';
-        confidenceText = item.confidence;
-        if (nextIndex == null) {
-          modeText = '本章完成';
-          feedbackText = '识别通过，全部动作已经按顺序解锁完成。';
-        } else {
-          _practiceLessonIndex = nextIndex;
-          modeText = '已解锁下一课';
-          feedbackText = '${item.feedback} 已解锁“${_runtimeLessons[nextIndex].title}”。';
-        }
-      } else if (_completedLessons[activeIndex]) {
+      _completedLessons[activeIndex] = true;
+      recognitionText = '识别结果：${item.word}';
+      confidenceText = item.confidence;
+
+      if (wasCompleted) {
         modeText = '复习模式';
-        feedbackText = '${activeLesson.title} 已经掌握，可以回到课程地图继续下一课。';
-        recognitionText = '识别结果：${item.word}';
-        confidenceText = item.confidence;
+        feedbackText = '${activeLesson.title} 已经掌握，可以继续练习任意课程。';
+      } else if (_currentLessonIndex == null) {
+        modeText = '本章完成';
+        feedbackText = '识别通过，全部动作已经完成。';
       } else {
-        modeText = '顺序解锁';
-        feedbackText = currentIndex == null
-            ? '本章已经完成。'
-            : '请先完成当前解锁动作“${lessons[currentIndex].title}”。';
-        recognitionText = '识别结果：${item.word}';
-        confidenceText = item.confidence;
+        modeText = '练习完成';
+        feedbackText = '${item.feedback} 其他章节也可以直接进入练习。';
       }
     });
     _changeTab(2);
@@ -364,7 +393,7 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
                 MonumentCourseMapScreen(
                   lessons: lessons,
                   onTabChanged: _changeTab,
-                  onStartLesson: _openPracticeForLesson,
+                  onStartLesson: _preparePracticeForLesson,
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(

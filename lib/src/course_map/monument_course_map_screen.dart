@@ -155,7 +155,7 @@ const List<CourseMapLesson> courseMapLessons = [
     duration: '10 min',
     description: '把基础词汇连接成完整问句，进入更真实的交流语境。',
     icon: Icons.chat_bubble_outline_rounded,
-    progressLabel: '即将解锁',
+    progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0.05,
     colors: [Color(0xFFF7C9CB), Color(0xFFFFE6E8)],
@@ -165,18 +165,78 @@ const List<CourseMapLesson> courseMapLessons = [
   ),
   CourseMapLesson(
     chapter: '第一章',
+    title: '请',
+    subtitle: '礼貌邀请',
+    duration: '07 min',
+    description: '练习手掌前送与停顿节奏，让邀请语气更清楚、更柔和。',
+    icon: Icons.pan_tool_alt_rounded,
+    progressLabel: '可直接学习',
+    difficulty: '进阶',
+    progressValue: 0.04,
+    colors: [Color(0xFFCFE5FF), Color(0xFFEAF4FF)],
+    xAlign: 0.54,
+    top: 1568,
+    state: CourseMapLessonState.upcoming,
+  ),
+  CourseMapLesson(
+    chapter: '第一章',
+    title: '没关系',
+    subtitle: '安慰回应',
+    duration: '09 min',
+    description: '把安抚语气和舒缓动作结合起来，让回应更有陪伴感。',
+    icon: Icons.spa_rounded,
+    progressLabel: '可直接学习',
+    difficulty: '进阶',
+    progressValue: 0.03,
+    colors: [Color(0xFFDDE9B5), Color(0xFFF3F8DA)],
+    xAlign: 0.18,
+    top: 1818,
+    state: CourseMapLessonState.upcoming,
+  ),
+  CourseMapLesson(
+    chapter: '第一章',
+    title: '一起',
+    subtitle: '协同表达',
+    duration: '08 min',
+    description: '练习共同动作的指向关系，把单人表达过渡到双人语境。',
+    icon: Icons.groups_rounded,
+    progressLabel: '可直接学习',
+    difficulty: '进阶',
+    progressValue: 0.03,
+    colors: [Color(0xFFF7D4AE), Color(0xFFFFEBD9)],
+    xAlign: 0.68,
+    top: 2058,
+    state: CourseMapLessonState.upcoming,
+  ),
+  CourseMapLesson(
+    chapter: '第一章',
+    title: '再见',
+    subtitle: '结束告别',
+    duration: '06 min',
+    description: '收束动作轨迹和视线方向，让告别表达自然落下，不显得生硬。',
+    icon: Icons.waving_hand_rounded,
+    progressLabel: '可直接学习',
+    difficulty: '基础',
+    progressValue: 0.03,
+    colors: [Color(0xFFE5C8EC), Color(0xFFF4E4F8)],
+    xAlign: 0.40,
+    top: 2306,
+    state: CourseMapLessonState.upcoming,
+  ),
+  CourseMapLesson(
+    chapter: '第一章',
     title: '一起练习',
     subtitle: '章节综合',
     duration: '12 min',
-    description: '完成前置课程后，进入完整连续表达的综合练习。',
+    description: '把问候、关怀、邀请和告别串成一段完整表达，完成本章收束。',
     icon: Icons.auto_awesome_rounded,
-    progressLabel: '综合关卡',
+    progressLabel: '可直接学习',
     difficulty: '进阶',
     progressValue: 0,
     colors: [Color(0xFFCCC7E3), Color(0xFFE9E5F1)],
     xAlign: 0.16,
-    top: 1462,
-    state: CourseMapLessonState.locked,
+    top: 2556,
+    state: CourseMapLessonState.upcoming,
   ),
 ];
 
@@ -200,7 +260,7 @@ class MonumentCourseMapScreen extends StatefulWidget {
 class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
     with SingleTickerProviderStateMixin {
   static const double _mapWidth = 760;
-  static const double _mapHeight = 1670;
+  static const double _mapHeight = 2840;
   static const Duration _collapseDelay = Duration(milliseconds: 70);
 
   late final AnimationController _floatController;
@@ -321,6 +381,33 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                                     child: _WaterPillar(),
                                   ),
                                 ),
+                                if (widget.lessons.length > 6)
+                                  Positioned(
+                                    right: 24,
+                                    top: 1728 + drift * 0.08,
+                                    child: const Opacity(
+                                      opacity: 0.34,
+                                      child: _SideCapsuleCluster(),
+                                    ),
+                                  ),
+                                if (widget.lessons.length > 7)
+                                  Positioned(
+                                    left: -6,
+                                    top: 2154 + drift * 0.06,
+                                    child: const Opacity(
+                                      opacity: 0.30,
+                                      child: _GlassAlcove(),
+                                    ),
+                                  ),
+                                if (widget.lessons.length > 8)
+                                  Positioned(
+                                    right: 112,
+                                    top: 2452 + drift * 0.05,
+                                    child: const Opacity(
+                                      opacity: 0.40,
+                                      child: _WaterPillar(),
+                                    ),
+                                  ),
                                 const Positioned.fill(
                                   child: CustomPaint(
                                     painter: _PrimaryBridgeOverlayPainter(),
@@ -438,7 +525,10 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                               lesson: selectedLesson,
                               onStartTap: selectedLesson.locked
                                   ? null
-                                  : () => widget.onStartLesson(_selectedIndex!),
+                                  : () {
+                                      _dismissCard();
+                                      widget.onStartLesson(_selectedIndex!);
+                                    },
                             ),
                           ),
                   ),
@@ -755,7 +845,7 @@ class _CourseInfoCard extends StatelessWidget {
                           lesson.locked
                               ? '完成前置课程后解锁'
                               : lesson.state == CourseMapLessonState.completed
-                                  ? '再次学习'
+                                  ? '设为复习课程'
                                   : '开始学习',
                           style: TextStyle(
                             fontSize: 15,
@@ -1151,6 +1241,10 @@ class _CourseMapNodeState extends State<_CourseMapNode>
     if (lesson.title == '谢谢') return const Color(0xFFE9C852);
     if (lesson.title == '我') return const Color(0xFF83D2C7);
     if (lesson.title == '你还好吗') return const Color(0xFFD88B8C);
+    if (lesson.title == '请') return const Color(0xFF8FB5E8);
+    if (lesson.title == '没关系') return const Color(0xFFBDCE74);
+    if (lesson.title == '一起') return const Color(0xFFF0B27D);
+    if (lesson.title == '再见') return const Color(0xFFD2A3D8);
     return const Color(0xFFF09B84);
   }
 }
@@ -1677,9 +1771,27 @@ class _CourseScenePainter extends CustomPainter {
         .map((lesson) => Offset(size.width * lesson.xAlign, lesson.top + 84))
         .toList();
 
-    _drawRope(canvas, anchors[2], anchors[3]);
-    _drawRope(canvas, anchors[2], anchors[4]);
-    _drawRope(canvas, anchors[3], anchors[5]);
+    if (anchors.length > 3) {
+      _drawRope(canvas, anchors[2], anchors[3]);
+    }
+    if (anchors.length > 4) {
+      _drawRope(canvas, anchors[2], anchors[4]);
+    }
+    if (anchors.length > 5) {
+      _drawRope(canvas, anchors[3], anchors[5]);
+    }
+    if (anchors.length > 6) {
+      _drawRope(canvas, anchors[5], anchors[6]);
+    }
+    if (anchors.length > 7) {
+      _drawRope(canvas, anchors[6], anchors[7]);
+    }
+    if (anchors.length > 8) {
+      _drawRope(canvas, anchors[7], anchors[8]);
+    }
+    if (anchors.length > 9) {
+      _drawRope(canvas, anchors[8], anchors[9]);
+    }
 
     _drawGhostArch(
       canvas,
@@ -1714,6 +1826,40 @@ class _CourseScenePainter extends CustomPainter {
       front: const Color(0xFFE1D7EF),
       side: const Color(0xFFBBAFDA),
     );
+    if (lessons.length > 6) {
+      _drawGhostArch(
+        canvas,
+        rect: const Rect.fromLTWH(74, 1758, 150, 258),
+        opacity: 0.06,
+        angle: 0.12,
+      );
+      _drawSupportCapsule(
+        canvas,
+        rect: const Rect.fromLTWH(596, 1846, 88, 232),
+        color: const Color(0xFF9BCBE7),
+        opacity: 0.12,
+      );
+      _drawSupportCapsule(
+        canvas,
+        rect: const Rect.fromLTWH(72, 2228, 82, 220),
+        color: const Color(0xFFF1C8BF),
+        opacity: 0.10,
+      );
+      _drawPlatform(
+        canvas,
+        rect: const Rect.fromLTWH(394, 1702, 118, 58),
+        top: const Color(0xFFF7ECDD),
+        front: const Color(0xFFDCE5F4),
+        side: const Color(0xFFAFC1DA),
+      );
+      _drawPlatform(
+        canvas,
+        rect: const Rect.fromLTWH(208, 2432, 126, 60),
+        top: const Color(0xFFF7EAD9),
+        front: const Color(0xFFE8D8EE),
+        side: const Color(0xFFC9B2D9),
+      );
+    }
 
     final sparklePaint = Paint()
       ..color = Colors.white.withOpacity(0.42)
@@ -1721,6 +1867,10 @@ class _CourseScenePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     _drawSparkle(canvas, const Offset(628, 310), sparklePaint);
     _drawSparkle(canvas, const Offset(632, 1432), sparklePaint);
+    if (lessons.length > 6) {
+      _drawSparkle(canvas, const Offset(612, 1892), sparklePaint);
+      _drawSparkle(canvas, const Offset(170, 2468), sparklePaint);
+    }
   }
 
   void _drawSunGlow(Canvas canvas) {
@@ -1751,6 +1901,22 @@ class _CourseScenePainter extends CustomPainter {
       ),
       mist,
     );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: const Offset(292, 1816),
+        width: 352,
+        height: 96,
+      ),
+      mist,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: const Offset(480, 2302),
+        width: 390,
+        height: 114,
+      ),
+      mist,
+    );
   }
 
   void _drawParticles(Canvas canvas) {
@@ -1765,6 +1931,11 @@ class _CourseScenePainter extends CustomPainter {
       Offset(538, 956),
       Offset(216, 1322),
       Offset(360, 1460),
+      Offset(518, 1718),
+      Offset(168, 1908),
+      Offset(612, 2124),
+      Offset(262, 2362),
+      Offset(146, 2616),
     ];
     for (final point in points) {
       canvas.drawCircle(point, 1.4, dot);
