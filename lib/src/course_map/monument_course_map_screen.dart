@@ -446,12 +446,12 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                 children: [
                   const _GlassPill(
                     icon: Icons.map_outlined,
-                    text: '课程地图',
+                    text: '第一章 · 课程地图',
                   ),
                   const Spacer(),
                   _GlassPill(
                     icon: Icons.layers_outlined,
-                    text: '已完成 $completedCount/${courseMapLessons.length}',
+                    text: '旅程进度 $completedCount/${courseMapLessons.length}',
                   ),
                 ],
               ),
@@ -672,6 +672,7 @@ class _CourseInfoCard extends StatelessWidget {
     final accentShadow = lesson.locked
         ? const Color(0xFFCFC9D8)
         : lesson.colors.first;
+    final cardGlow = lesson.colors.first.withOpacity(0.16);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
@@ -695,9 +696,17 @@ class _CourseInfoCard extends StatelessWidget {
           },
           child: Container(
             key: ValueKey(lesson.title),
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.60),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.76),
+                  lesson.colors.last.withOpacity(0.30),
+                  lesson.colors.first.withOpacity(0.18),
+                ],
+              ),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
                 color: Colors.white.withOpacity(0.78),
@@ -711,7 +720,7 @@ class _CourseInfoCard extends StatelessWidget {
                   offset: const Offset(0, 18),
                 ),
                 BoxShadow(
-                  color: accentShadow.withOpacity(0.12),
+                  color: cardGlow,
                   blurRadius: 28,
                   spreadRadius: 1,
                   offset: const Offset(0, 10),
@@ -780,6 +789,72 @@ class _CourseInfoCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        lesson.colors.first.withOpacity(0.20),
+                        lesson.colors.last.withOpacity(0.42),
+                        Colors.white.withOpacity(0.48),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.62),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '课程氛围',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF6A7591).withOpacity(0.92),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${lesson.chapter} · ${lesson.subtitle}',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF313A59),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              lesson.colors.last.withOpacity(0.94),
+                              lesson.colors.first.withOpacity(0.94),
+                            ],
+                          ),
+                        ),
+                        child: Icon(
+                          lesson.icon,
+                          color: const Color(0xFF46516D),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -930,19 +1005,46 @@ class _GlassPill extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.54),
+                const Color(0xFFF8F1FF).withOpacity(0.34),
+                const Color(0xFFEAF6FF).withOpacity(0.28),
+              ],
+            ),
             borderRadius: BorderRadius.circular(999),
-            color: Colors.white.withOpacity(0.38),
             border: Border.all(
               color: Colors.white.withOpacity(0.68),
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2E3557).withOpacity(0.07),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: const Color(0xFF4D5776)),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.74),
+                ),
+                child: Icon(
+                  icon,
+                  size: 14,
+                  color: const Color(0xFF4D5776),
+                ),
+              ),
               const SizedBox(width: 8),
               Text(
                 text,
