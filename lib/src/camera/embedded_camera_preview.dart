@@ -138,7 +138,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
       setState(() {
         _isRecognitionRunning = true;
         _latestSignResult = null;
-        _statusMessage = '正在进行双手关键点识别。';
+        _statusMessage = '正在进行课程手势关键点识别。';
       });
     } catch (error) {
       if (!mounted) {
@@ -412,6 +412,11 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
               style: const TextStyle(fontSize: 12, color: Color(0xFF5F678F)),
             ),
           ],
+          const SizedBox(height: 4),
+          Text(
+            "当前支持：${HandSignRecognizer.supportedLabels.join(' / ')}",
+            style: const TextStyle(fontSize: 12, color: Color(0xFF5F678F)),
+          ),
         ],
       ),
     );

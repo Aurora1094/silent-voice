@@ -15,14 +15,18 @@ class MockRecognitionEngine(
         val random = Random(System.currentTimeMillis())
         val confidence = 0.72f + random.nextFloat() * 0.25f
         val handedness = if (random.nextBoolean()) "Right" else "Left"
+        val supportedLabels = listOf(
+            "我",
+            "爱",
+            "南",
+            "开",
+            "你好",
+            "谢谢",
+            "没有",
+        )
         val label = when (detectorType) {
-            DetectorType.GESTURE_RECOGNIZER -> listOf(
-                "Open Palm",
-                "Thumbs Up",
-                "Closed Fist",
-                "Pointing Up",
-            ).random(random)
-            DetectorType.HAND_LANDMARKER -> "Hand detected"
+            DetectorType.GESTURE_RECOGNIZER -> supportedLabels.random(random)
+            DetectorType.HAND_LANDMARKER -> supportedLabels.random(random)
         }
         val landmarks = buildMockLandmarks(random)
 

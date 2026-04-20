@@ -115,6 +115,11 @@ class HandFeatureExtractor {
     final thumbExtended = _isThumbExtended(landmarks, wrist, scale);
     final thumbOutward = _isThumbOutward(landmarks, hand.handedness);
     final palmOrientation = _computePalmOrientation(wrist, indexMcp, pinkyMcp);
+    final thumbTip = landmarks[_LandmarkIndex.thumbTip];
+    final indexTip = landmarks[_LandmarkIndex.indexTip];
+    final middleTip = landmarks[_LandmarkIndex.middleTip];
+    final ringTip = landmarks[_LandmarkIndex.ringTip];
+    final pinkyTip = landmarks[_LandmarkIndex.pinkyTip];
     final openPalmScore = [
       thumbExtended,
       indexExtended,
@@ -137,6 +142,13 @@ class HandFeatureExtractor {
       thumbOutward: thumbOutward,
       palmOrientation: palmOrientation,
       openPalmScore: openPalmScore,
+      fingerSpread: _distance(indexTip, pinkyTip) / scale,
+      thumbIndexDistance: _distance(thumbTip, indexTip) / scale,
+      thumbMiddleDistance: _distance(thumbTip, middleTip) / scale,
+      indexMiddleDistance: _distance(indexTip, middleTip) / scale,
+      middleRingDistance: _distance(middleTip, ringTip) / scale,
+      ringPinkyDistance: _distance(ringTip, pinkyTip) / scale,
+      middleDirectionY: (middleTip.y - wrist.y) / scale,
     );
   }
 
@@ -272,6 +284,13 @@ class HandFeatures {
     required this.thumbOutward,
     required this.palmOrientation,
     required this.openPalmScore,
+    required this.fingerSpread,
+    required this.thumbIndexDistance,
+    required this.thumbMiddleDistance,
+    required this.indexMiddleDistance,
+    required this.middleRingDistance,
+    required this.ringPinkyDistance,
+    required this.middleDirectionY,
   });
 
   final String handedness;
@@ -287,6 +306,13 @@ class HandFeatures {
   final bool thumbOutward;
   final double palmOrientation;
   final double openPalmScore;
+  final double fingerSpread;
+  final double thumbIndexDistance;
+  final double thumbMiddleDistance;
+  final double indexMiddleDistance;
+  final double middleRingDistance;
+  final double ringPinkyDistance;
+  final double middleDirectionY;
 
   factory HandFeatures.empty(String handedness) {
     return HandFeatures(
@@ -303,6 +329,13 @@ class HandFeatures {
       thumbOutward: false,
       palmOrientation: 0,
       openPalmScore: 0,
+      fingerSpread: 0,
+      thumbIndexDistance: 0,
+      thumbMiddleDistance: 0,
+      indexMiddleDistance: 0,
+      middleRingDistance: 0,
+      ringPinkyDistance: 0,
+      middleDirectionY: 0,
     );
   }
 
@@ -323,6 +356,13 @@ class HandFeatures {
       thumbOutward: thumbOutward,
       palmOrientation: palmOrientation,
       openPalmScore: openPalmScore,
+      fingerSpread: fingerSpread,
+      thumbIndexDistance: thumbIndexDistance,
+      thumbMiddleDistance: thumbMiddleDistance,
+      indexMiddleDistance: indexMiddleDistance,
+      middleRingDistance: middleRingDistance,
+      ringPinkyDistance: ringPinkyDistance,
+      middleDirectionY: middleDirectionY,
     );
   }
 
@@ -335,12 +375,44 @@ class HandFeatures {
       ].where((flag) => flag).length;
 
   bool get isOpenPalm => openPalmScore >= 0.8;
+  bool get isThumbOnly =>
+      thumbExtended &&
+      !indexExtended &&
+      !middleExtended &&
+      !ringExtended &&
+      !pinkyExtended;
   bool get isIndexOnly =>
       indexExtended &&
       !middleExtended &&
       !ringExtended &&
       !pinkyExtended &&
       !thumbExtended;
+  bool get isFlatPalm =>
+      indexExtended && middleExtended && ringExtended && pinkyExtended;
+  bool get isTightFlatHand =>
+      isFlatPalm &&
+      fingerSpread <= 0.82 &&
+      indexMiddleDistance <= 0.30 &&
+      middleRingDistance <= 0.28 &&
+      ringPinkyDistance <= 0.28;
+  bool get isDownwardTightFlatHand =>
+      isTightFlatHand && middleDirectionY >= 0.14;
+  bool get isFlatPalmWithThumbFolded => isFlatPalm && !thumbExtended;
+  bool get isClosedFist => extendedFingerCount == 0 || openPalmScore <= 0.2;
+  bool get isOpenWidePalm => isOpenPalm && fingerSpread >= 0.9;
+  bool get isVShape =>
+      indexExtended &&
+      middleExtended &&
+      !ringExtended &&
+      !pinkyExtended;
+  bool get isPinchLike =>
+      !isOpenPalm &&
+      !ringExtended &&
+      !pinkyExtended &&
+      (indexExtended || middleExtended || thumbExtended) &&
+      thumbIndexDistance <= 0.34 &&
+      thumbMiddleDistance <= 0.44 &&
+      indexMiddleDistance <= 0.22;
   bool get isThumbsUp =>
       thumbExtended &&
       thumbOutward &&

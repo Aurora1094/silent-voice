@@ -94,11 +94,6 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       feedback: '展开动作很清楚，开合节奏已经做出来了。',
     ),
     RecognitionSample(
-      word: '大学',
-      confidence: '93%',
-      feedback: '组合词汇的连接已经比较顺，整体语义表达很完整。',
-    ),
-    RecognitionSample(
       word: '你好',
       confidence: '90%',
       feedback: '问候动作稳定自然，起手位置和节奏都比较准确。',
@@ -109,19 +104,9 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       feedback: '感谢动作的送出方向已经对了，节奏也很舒服。',
     ),
     RecognitionSample(
-      word: '不',
-      confidence: '91%',
-      feedback: '否定动作干净利落，表达边界已经很清楚了。',
-    ),
-    RecognitionSample(
       word: '没有',
       confidence: '93%',
       feedback: '语义延展很自然，缺失表达已经能稳定做出来。',
-    ),
-    RecognitionSample(
-      word: '再见',
-      confidence: '95%',
-      feedback: '收束动作很完整，告别的节奏已经出来了。',
     ),
   ];
 
@@ -153,11 +138,6 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       confidence: '96%',
       feedback: '识别通过，展开动作已经完整连贯。',
     ),
-    '大学': RecognitionSample(
-      word: '大学',
-      confidence: '92%',
-      feedback: '识别通过，组合词汇已经顺利连起来了。',
-    ),
     '你好': RecognitionSample(
       word: '你好',
       confidence: '93%',
@@ -168,20 +148,10 @@ class _MonumentValleyHomeState extends State<MonumentValleyHome> {
       confidence: '90%',
       feedback: '识别通过，感谢动作的方向和节奏已经对了。',
     ),
-    '不': RecognitionSample(
-      word: '不',
-      confidence: '92%',
-      feedback: '识别通过，否定动作已经干净利落。',
-    ),
     '没有': RecognitionSample(
       word: '没有',
       confidence: '93%',
       feedback: '识别通过，缺失表达已经很完整了。',
-    ),
-    '再见': RecognitionSample(
-      word: '再见',
-      confidence: '95%',
-      feedback: '识别通过，告别动作已经收得很自然。',
     ),
   };
 

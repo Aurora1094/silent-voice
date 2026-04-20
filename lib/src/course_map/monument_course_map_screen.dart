@@ -150,21 +150,6 @@ const List<CourseMapLesson> courseMapLessons = [
   ),
   CourseMapLesson(
     chapter: '第一章',
-    title: '大学',
-    subtitle: '场景词汇',
-    duration: '10 min',
-    description: '把组合词汇连成完整概念，进入更具体的校园语境。',
-    icon: Icons.school_rounded,
-    progressLabel: '可直接学习',
-    difficulty: '进阶',
-    progressValue: 0.05,
-    colors: [Color(0xFFD8CCF6), Color(0xFFF0E8FF)],
-    xAlign: 0.73,
-    top: 1260,
-    state: CourseMapLessonState.upcoming,
-  ),
-  CourseMapLesson(
-    chapter: '第一章',
     title: '你好',
     subtitle: '基础问候',
     duration: '07 min',
@@ -174,8 +159,8 @@ const List<CourseMapLesson> courseMapLessons = [
     difficulty: '进阶',
     progressValue: 0.04,
     colors: [Color(0xFFF7C7B6), Color(0xFFFFE8DB)],
-    xAlign: 0.54,
-    top: 1568,
+    xAlign: 0.73,
+    top: 1260,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
@@ -190,22 +175,7 @@ const List<CourseMapLesson> courseMapLessons = [
     progressValue: 0.03,
     colors: [Color(0xFFF5D770), Color(0xFFFFF2C9)],
     xAlign: 0.18,
-    top: 1818,
-    state: CourseMapLessonState.upcoming,
-  ),
-  CourseMapLesson(
-    chapter: '第一章',
-    title: '不',
-    subtitle: '否定表达',
-    duration: '08 min',
-    description: '学习简洁明确的否定动作，让表达更有边界感和节奏。',
-    icon: Icons.close_rounded,
-    progressLabel: '可直接学习',
-    difficulty: '进阶',
-    progressValue: 0.03,
-    colors: [Color(0xFFDDE9B5), Color(0xFFF3F8DA)],
-    xAlign: 0.68,
-    top: 2058,
+    top: 1568,
     state: CourseMapLessonState.upcoming,
   ),
   CourseMapLesson(
@@ -220,22 +190,7 @@ const List<CourseMapLesson> courseMapLessons = [
     progressValue: 0.03,
     colors: [Color(0xFFE5C8EC), Color(0xFFF4E4F8)],
     xAlign: 0.40,
-    top: 2306,
-    state: CourseMapLessonState.upcoming,
-  ),
-  CourseMapLesson(
-    chapter: '第一章',
-    title: '再见',
-    subtitle: '结束告别',
-    duration: '12 min',
-    description: '收束动作轨迹和视线方向，让告别表达自然落下，完成本章收尾。',
-    icon: Icons.waving_hand_rounded,
-    progressLabel: '可直接学习',
-    difficulty: '进阶',
-    progressValue: 0,
-    colors: [Color(0xFFCCC7E3), Color(0xFFE9E5F1)],
-    xAlign: 0.16,
-    top: 2556,
+    top: 1818,
     state: CourseMapLessonState.upcoming,
   ),
 ];
@@ -1879,11 +1834,9 @@ class _CourseMapNodeState extends State<_CourseMapNode>
     if (lesson.title == '爱') return const Color(0xFFD88B8C);
     if (lesson.title == '南') return const Color(0xFF8FB5E8);
     if (lesson.title == '开') return const Color(0xFFF0B27D);
-    if (lesson.title == '大学') return const Color(0xFFBDA6E0);
+    if (lesson.title == '你好') return const Color(0xFFE39B88);
     if (lesson.title == '谢谢') return const Color(0xFFE9C852);
-    if (lesson.title == '不') return const Color(0xFFBDCE74);
     if (lesson.title == '没有') return const Color(0xFFD2A3D8);
-    if (lesson.title == '再见') return const Color(0xFFD2A3D8);
     return const Color(0xFFF09B84);
   }
 }
@@ -1988,13 +1941,6 @@ class _NodeTotem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (!locked && lesson.title == '谢谢')
-            const Icon(
-              Icons.auto_awesome_rounded,
-              size: 18,
-              color: Color(0xFFF0C749),
-            ),
-          if (!locked && lesson.title == '谢谢') const SizedBox(height: 4),
           Container(
             width: 12,
             height: 34,

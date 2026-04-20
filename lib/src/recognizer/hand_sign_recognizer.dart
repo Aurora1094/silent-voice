@@ -11,9 +11,19 @@ class HandSignRecognizer {
   }) : _featureExtractor = featureExtractor ?? HandFeatureExtractor();
 
   static const String unknownLabel = '\u672A\u8BC6\u522B';
+  static const List<String> supportedLabels = <String>[
+    '\u6211',
+    '\u7231',
+    '\u5357',
+    '\u5f00',
+    '\u4f60\u597d',
+    '\u8c22\u8c22',
+    '\u6ca1\u6709',
+  ];
 
   final HandFeatureExtractor _featureExtractor;
   final Queue<_FramePrediction> _history = Queue<_FramePrediction>();
+  final Queue<_FrameCue> _cueHistory = Queue<_FrameCue>();
   final Map<String, _MotionSample> _lastCenters = <String, _MotionSample>{};
 
   HandSignResult? _stableResult;
@@ -21,11 +31,16 @@ class HandSignRecognizer {
   HandSignResult process(RecognitionResult rawResult) {
     final features = _featureExtractor.extract(rawResult);
     final motion = _buildMotionFeatures(features);
+    final cue = _buildCue(features);
     final prediction = _scoreFrame(features, motion);
 
     _history.addLast(prediction);
     while (_history.length > 5) {
       _history.removeFirst();
+    }
+    _cueHistory.addLast(cue);
+    while (_cueHistory.length > 8) {
+      _cueHistory.removeFirst();
     }
 
     final stabilized = _stabilize(prediction);
@@ -36,6 +51,7 @@ class HandSignRecognizer {
 
   void reset() {
     _history.clear();
+    _cueHistory.clear();
     _lastCenters.clear();
     _stableResult = null;
   }
@@ -88,11 +104,13 @@ class HandSignRecognizer {
     _MotionFeatures motion,
   ) {
     final scores = <String, double>{
-      '\u4F60\u597D': _scoreThanks(features, motion),
-      '\u8C22\u8C22': _scoreHello(features, motion),
       '\u6211': _scoreMe(features, motion),
-      '\u559C\u6B22': _scoreLike(features, motion),
-      '\u518D\u89C1': _scoreGoodbye(features, motion),
+      '\u7231': _scoreLove(features, motion),
+      '\u5357': _scoreSouth(features, motion),
+      '\u5f00': _scoreOpen(features, motion),
+      '\u4f60\u597d': _scoreHello(features, motion),
+      '\u8c22\u8c22': _scoreThanks(features, motion),
+      '\u6ca1\u6709': _scoreNothing(features, motion),
     };
 
     final sorted = scores.entries.toList()
@@ -104,7 +122,7 @@ class HandSignRecognizer {
       if (features.rightHand != null) 'Right',
     ];
 
-    final shouldBeUnknown = best.value < 0.62 || (best.value - secondScore) < 0.08;
+    final shouldBeUnknown = best.value < 0.56 || (best.value - secondScore) < 0.05;
     final label = shouldBeUnknown ? unknownLabel : best.key;
     final confidence = shouldBeUnknown
         ? math.min(0.55, best.value)
@@ -122,90 +140,236 @@ class HandSignRecognizer {
   double _scoreHello(SignFrameFeatures features, _MotionFeatures motion) {
     final hand = features.primaryHand;
     final primaryMotion = motion.primary(features);
-    if (hand == null) {
+    if (hand == null || !features.hasSingleHand) {
       return 0;
     }
 
-    var score = 0.0;
-    if (features.hasSingleHand) score += 0.18;
-    score += 0.42 * hand.openPalmScore;
-    if (primaryMotion.direction == MovementDirection.left ||
-        primaryMotion.direction == MovementDirection.right) {
-      score += 0.28;
-    }
-    if (primaryMotion.magnitude > 0.14 && primaryMotion.magnitude < 1.1) {
-      score += 0.12;
-    }
+    var score = 0.04;
+    score += _bonusIf(hand.isThumbOnly, 0.28);
+    score += _bonusIf(_hasRecentPrimaryShape('indexOnly', within: 6), 0.34);
+    score += _bonusIf(_isStableOrSmall(primaryMotion), 0.10);
+    score += _rangeBonus(hand.center.x, 0.20, 0.82, 0.06);
+    score += _rangeBonus(hand.center.y, 0.14, 0.62, 0.06);
     return score.clamp(0, 1);
   }
 
   double _scoreThanks(SignFrameFeatures features, _MotionFeatures motion) {
     final hand = features.primaryHand;
     final primaryMotion = motion.primary(features);
-    if (hand == null) {
+    if (hand == null || !features.hasSingleHand) {
       return 0;
     }
 
-    var score = 0.0;
-    if (features.hasSingleHand) score += 0.16;
-    score += 0.44 * hand.openPalmScore;
-    if (primaryMotion.direction == MovementDirection.down) {
-      score += 0.28;
-    }
-    if (primaryMotion.magnitude > 0.12 && primaryMotion.magnitude < 1.0) {
-      score += 0.12;
-    }
+    var score = 0.10;
+    score += _bonusIf(hand.isThumbOnly, 0.42);
+    score += _bonusIf(primaryMotion.direction == MovementDirection.down, 0.24);
+    score += _rangeBonus(primaryMotion.magnitude, 0.06, 0.88, 0.08);
+    score += _rangeBonus(hand.center.y, 0.10, 0.64, 0.08);
+    score += _rangeBonus(hand.center.x, 0.18, 0.82, 0.06);
     return score.clamp(0, 1);
   }
 
   double _scoreMe(SignFrameFeatures features, _MotionFeatures motion) {
     final hand = features.primaryHand;
     final primaryMotion = motion.primary(features);
-    if (hand == null) {
+    if (hand == null || !features.hasSingleHand) {
       return 0;
     }
 
-    var score = 0.0;
-    if (features.hasSingleHand) score += 0.18;
-    if (hand.isIndexOnly) score += 0.62;
-    if (primaryMotion.direction == MovementDirection.stable) score += 0.12;
-    if (hand.palmWidth > 0) score += 0.08;
+    var score = 0.18;
+    score += _bonusIf(hand.isIndexOnly, 0.54);
+    score += _bonusIf(hand.extendedFingerCount <= 1, 0.08);
+    score += _bonusIf(primaryMotion.direction == MovementDirection.stable, 0.10);
+    score += _rangeBonus(hand.center.x, 0.32, 0.68, 0.08);
+    score += _rangeBonus(hand.center.y, 0.32, 0.84, 0.06);
     return score.clamp(0, 1);
   }
 
-  double _scoreLike(SignFrameFeatures features, _MotionFeatures motion) {
-    final hand = features.primaryHand;
-    final primaryMotion = motion.primary(features);
-    if (hand == null) {
-      return 0;
-    }
-
-    var score = 0.0;
-    if (features.hasSingleHand) score += 0.16;
-    if (hand.isThumbsUp) score += 0.66;
-    if (primaryMotion.direction == MovementDirection.stable) score += 0.10;
-    if (hand.thumbOutward) score += 0.08;
-    return score.clamp(0, 1);
-  }
-
-  double _scoreGoodbye(SignFrameFeatures features, _MotionFeatures motion) {
+  double _scoreLove(SignFrameFeatures features, _MotionFeatures motion) {
     if (!features.hasTwoHands) {
       return 0;
     }
 
     final left = features.leftHand!;
     final right = features.rightHand!;
-    var score = 0.0;
-    score += 0.20;
-    score += 0.26 * left.openPalmScore;
-    score += 0.26 * right.openPalmScore;
-    if ((features.handDistance ?? 0) > 0.22) score += 0.14;
-    if ((features.horizontalGap ?? 0) > 0.06) score += 0.08;
-    if (motion.left?.direction == MovementDirection.left &&
-        motion.right?.direction == MovementDirection.right) {
-      score += 0.06;
+    final leftIsThumbOnly = left.isThumbOnly;
+    final rightIsThumbOnly = right.isThumbOnly;
+    if (leftIsThumbOnly == rightIsThumbOnly) {
+      return 0;
     }
+
+    final thumbHand = leftIsThumbOnly ? left : right;
+    final supportHand = leftIsThumbOnly ? right : left;
+    final horizontalGap = (features.horizontalGap ?? 0).abs();
+    final handDistance = features.handDistance ?? 0;
+
+    var score = 0.12;
+    score += 0.30;
+    score += _rangeBonus(supportHand.openPalmScore, 0.20, 0.90, 0.14);
+    score += _bonusIf(supportHand.extendedFingerCount >= 2, 0.10);
+    score += _rangeBonus(handDistance, 0.10, 0.32, 0.14);
+    score += _rangeBonus(horizontalGap, 0.02, 0.22, 0.08);
+    score += _bonusIf((features.verticalGap ?? 0).abs() < 0.18, 0.06);
+    score += _bonusIf(_matchesLoveStrokeMotion(motion, thumbHand.handedness), 0.12);
     return score.clamp(0, 1);
+  }
+
+  double _scoreSouth(SignFrameFeatures features, _MotionFeatures motion) {
+    final hand = features.primaryHand;
+    final primaryMotion = motion.primary(features);
+    if (hand == null || !features.hasSingleHand) {
+      return 0;
+    }
+
+    var score = 0.14;
+    score += _bonusIf(hand.isDownwardTightFlatHand, 0.30);
+    score += _bonusIf(hand.isTightFlatHand, 0.12);
+    score += _bonusIf(hand.isFlatPalmWithThumbFolded, 0.20);
+    score += _bonusIf(hand.isFlatPalm && hand.fingerSpread <= 1.02, 0.10);
+    score += _bonusIf(hand.middleDirectionY >= 0.02, 0.08);
+    score += _bonusIf(!hand.thumbExtended, 0.06);
+    score += _bonusIf(
+      primaryMotion.direction == MovementDirection.stable ||
+          primaryMotion.direction == MovementDirection.down,
+      0.10,
+    );
+    score += _rangeBonus(hand.center.x, 0.18, 0.82, 0.06);
+    score += _rangeBonus(hand.center.y, 0.18, 0.88, 0.08);
+    score += _bonusIf(!hand.isOpenWidePalm, 0.04);
+    return score.clamp(0, 1);
+  }
+
+  double _scoreOpen(SignFrameFeatures features, _MotionFeatures motion) {
+    if (!features.hasTwoHands) {
+      return 0;
+    }
+
+    final left = features.leftHand!;
+    final right = features.rightHand!;
+    final horizontalGap = (features.horizontalGap ?? 0).abs();
+    final handDistance = features.handDistance ?? 0;
+
+    var score = 0.18;
+    score += 0.18 * left.openPalmScore;
+    score += 0.18 * right.openPalmScore;
+    score += _bonusIf(motion.movingApartHorizontally, 0.18);
+    score += _rangeBonus(horizontalGap, 0.10, 0.34, 0.10);
+    score += _rangeBonus(handDistance, 0.24, 0.52, 0.10);
+    score += _bonusIf((features.verticalGap ?? 0).abs() < 0.16, 0.06);
+    return score.clamp(0, 1);
+  }
+
+  double _scoreUniversity(SignFrameFeatures features, _MotionFeatures motion) {
+    if (!features.hasTwoHands) {
+      return 0;
+    }
+
+    final left = features.leftHand!;
+    final right = features.rightHand!;
+    final horizontalGap = (features.horizontalGap ?? 0).abs();
+    final handDistance = features.handDistance ?? 0;
+
+    var score = 0.16;
+    score += 0.18 * left.openPalmScore;
+    score += 0.18 * right.openPalmScore;
+    score += _rangeBonus(horizontalGap, 0.06, 0.24, 0.14);
+    score += _rangeBonus(handDistance, 0.18, 0.38, 0.14);
+    score += _bonusIf((features.verticalGap ?? 0).abs() < 0.20, 0.08);
+    score += _bonusIf(motion.areMostlyStable || motion.movingTogetherHorizontally, 0.08);
+    score += _bonusIf(left.isFlatPalm || right.isFlatPalm, 0.04);
+    return score.clamp(0, 1);
+  }
+
+  double _scoreNothing(SignFrameFeatures features, _MotionFeatures motion) {
+    final hand = features.primaryHand;
+    final primaryMotion = motion.primary(features);
+    if (hand == null || !features.hasSingleHand) {
+      return 0;
+    }
+
+    final repeatedPinchCount = _countRecentPrimaryShape('pinchLike', within: 6);
+
+    var score = 0.10;
+    score += _bonusIf(hand.isPinchLike, 0.46);
+    score += _bonusIf(repeatedPinchCount >= 2, 0.16);
+    score += _bonusIf(_isStableOrSmall(primaryMotion, maxMagnitude: 0.32), 0.08);
+    score += _bonusIf(hand.thumbIndexDistance <= 0.24, 0.08);
+    score += _bonusIf(hand.thumbMiddleDistance <= 0.34, 0.08);
+    score += _rangeBonus(hand.center.x, 0.22, 0.78, 0.04);
+    score += _rangeBonus(hand.center.y, 0.20, 0.82, 0.06);
+    return score.clamp(0, 1);
+  }
+
+  _FrameCue _buildCue(SignFrameFeatures features) {
+    final hand = features.primaryHand;
+    if (hand == null || !features.hasSingleHand) {
+      return const _FrameCue(primaryShape: 'other');
+    }
+    if (hand.isIndexOnly) {
+      return const _FrameCue(primaryShape: 'indexOnly');
+    }
+    if (hand.isThumbOnly) {
+      return const _FrameCue(primaryShape: 'thumbOnly');
+    }
+    if (hand.isPinchLike) {
+      return const _FrameCue(primaryShape: 'pinchLike');
+    }
+    if (hand.isDownwardTightFlatHand) {
+      return const _FrameCue(primaryShape: 'downwardFlat');
+    }
+    if (hand.isTightFlatHand || hand.isFlatPalmWithThumbFolded) {
+      return const _FrameCue(primaryShape: 'flatHand');
+    }
+    if (hand.isOpenWidePalm) {
+      return const _FrameCue(primaryShape: 'openPalm');
+    }
+    return const _FrameCue(primaryShape: 'other');
+  }
+
+  int _countRecentPrimaryShape(String shape, {int within = 6}) {
+    return _cueHistory.toList(growable: false).reversed.take(within).where((cue) {
+      return cue.primaryShape == shape;
+    }).length;
+  }
+
+  bool _hasRecentPrimaryShape(String shape, {int within = 6}) {
+    return _countRecentPrimaryShape(shape, within: within) > 0;
+  }
+
+  bool _isHorizontal(_MovementState? movement) {
+    return movement?.direction == MovementDirection.left ||
+        movement?.direction == MovementDirection.right;
+  }
+
+  bool _isStableOrSmall(
+    _MovementState? movement, {
+    double maxMagnitude = 0.24,
+  }) {
+    if (movement == null) {
+      return true;
+    }
+    return movement.direction == MovementDirection.stable ||
+        movement.magnitude <= maxMagnitude;
+  }
+
+  bool _matchesLoveStrokeMotion(
+    _MotionFeatures motion,
+    String thumbHandedness,
+  ) {
+    final anchor = thumbHandedness == 'Left' ? motion.left : motion.right;
+    final support = thumbHandedness == 'Left' ? motion.right : motion.left;
+    final supportLooksLikeStroke =
+        _isHorizontal(support) || support?.direction == MovementDirection.down;
+    return _isStableOrSmall(anchor, maxMagnitude: 0.32) &&
+        (supportLooksLikeStroke || _isStableOrSmall(support, maxMagnitude: 0.22));
+  }
+
+  double _bonusIf(bool condition, double value) {
+    return condition ? value : 0.0;
+  }
+
+  double _rangeBonus(double value, double min, double max, double bonus) {
+    return value >= min && value <= max ? bonus : 0.0;
   }
 
   double _confidenceFromScores(double topScore, double secondScore) {
@@ -316,6 +480,14 @@ class _FramePrediction {
   final Map<String, double> rawScores;
 }
 
+class _FrameCue {
+  const _FrameCue({
+    required this.primaryShape,
+  });
+
+  final String primaryShape;
+}
+
 class _MotionFeatures {
   const _MotionFeatures({
     required this.left,
@@ -330,6 +502,18 @@ class _MotionFeatures {
         left ??
         const _MovementState(direction: MovementDirection.stable, magnitude: 0);
   }
+
+  bool get movingApartHorizontally =>
+      left?.direction == MovementDirection.left &&
+      right?.direction == MovementDirection.right;
+
+  bool get movingTogetherHorizontally =>
+      left?.direction == MovementDirection.right &&
+      right?.direction == MovementDirection.left;
+
+  bool get areMostlyStable =>
+      (left == null || left!.direction == MovementDirection.stable) &&
+      (right == null || right!.direction == MovementDirection.stable);
 }
 
 class _MovementState {
