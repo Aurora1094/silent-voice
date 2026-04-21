@@ -2886,10 +2886,20 @@ class _CourseScenePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = railWidth * 0.42
       ..strokeCap = StrokeCap.round;
-    final rung = Paint()
-      ..color = const Color(0xFFF6EDD6)
+    final rungShadow = Paint()
+      ..color = const Color(0x22434D6E)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = rungWidth
+      ..strokeWidth = rungWidth + 1.6
+      ..strokeCap = StrokeCap.round;
+    final rung = Paint()
+      ..color = const Color(0xFFE8D0A2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rungWidth + 0.5
+      ..strokeCap = StrokeCap.round;
+    final rungHighlight = Paint()
+      ..color = const Color(0xFFFFF6DD)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rungWidth * 0.44
       ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(leftStart, leftEnd, shadow);
@@ -2904,12 +2914,26 @@ class _CourseScenePainter extends CustomPainter {
       final t = (i + 1) / (rungCount + 1);
       final cx = start.dx + dx * t;
       final cy = start.dy + dy * t;
-      final rungInset = railOffset * 0.14;
+      final rungInset = railOffset * 0.06;
+      final rungStart = Offset(
+        cx - nx * (railOffset - rungInset),
+        cy - ny * (railOffset - rungInset),
+      );
+      final rungEnd = Offset(
+        cx + nx * (railOffset - rungInset),
+        cy + ny * (railOffset - rungInset),
+      );
       canvas.drawLine(
-        Offset(cx - nx * (railOffset - rungInset), cy - ny * (railOffset - rungInset)),
-        Offset(cx + nx * (railOffset - rungInset), cy + ny * (railOffset - rungInset)),
+        rungStart,
+        rungEnd,
+        rungShadow,
+      );
+      canvas.drawLine(
+        rungStart,
+        rungEnd,
         rung,
       );
+      canvas.drawLine(rungStart, rungEnd, rungHighlight);
     }
   }
 
@@ -2994,10 +3018,20 @@ class _PrimaryBridgeOverlayPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = railWidth * 0.42
       ..strokeCap = StrokeCap.round;
-    final rung = Paint()
-      ..color = const Color(0xFFF6EDD6)
+    final rungShadow = Paint()
+      ..color = const Color(0x22434D6E)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = rungWidth
+      ..strokeWidth = rungWidth + 1.6
+      ..strokeCap = StrokeCap.round;
+    final rung = Paint()
+      ..color = const Color(0xFFE8D0A2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rungWidth + 0.5
+      ..strokeCap = StrokeCap.round;
+    final rungHighlight = Paint()
+      ..color = const Color(0xFFFFF6DD)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = rungWidth * 0.44
       ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(leftStart, leftEnd, shadow);
@@ -3012,18 +3046,26 @@ class _PrimaryBridgeOverlayPainter extends CustomPainter {
       final t = (i + 1) / (rungCount + 1);
       final cx = start.dx + dx * t;
       final cy = start.dy + dy * t;
-      final rungInset = railOffset * 0.14;
+      final rungInset = railOffset * 0.06;
+      final rungStart = Offset(
+        cx - nx * (railOffset - rungInset),
+        cy - ny * (railOffset - rungInset),
+      );
+      final rungEnd = Offset(
+        cx + nx * (railOffset - rungInset),
+        cy + ny * (railOffset - rungInset),
+      );
       canvas.drawLine(
-        Offset(
-          cx - nx * (railOffset - rungInset),
-          cy - ny * (railOffset - rungInset),
-        ),
-        Offset(
-          cx + nx * (railOffset - rungInset),
-          cy + ny * (railOffset - rungInset),
-        ),
+        rungStart,
+        rungEnd,
+        rungShadow,
+      );
+      canvas.drawLine(
+        rungStart,
+        rungEnd,
         rung,
       );
+      canvas.drawLine(rungStart, rungEnd, rungHighlight);
     }
   }
 
