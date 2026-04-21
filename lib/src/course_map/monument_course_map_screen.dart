@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../camera/embedded_camera_preview.dart';
+import 'course_advice_service.dart';
 
 enum CourseMapLessonState { completed, current, upcoming, locked }
 
@@ -870,7 +871,7 @@ class _LearningDialogIllustrationPlaceholder extends StatelessWidget {
   }
 }
 
-class _LearningDialogSuggestionPanel extends StatelessWidget {
+class _LearningDialogSuggestionPanel extends StatefulWidget {
   const _LearningDialogSuggestionPanel({
     required this.lesson,
     this.fontFamily,
@@ -880,65 +881,130 @@ class _LearningDialogSuggestionPanel extends StatelessWidget {
   final String? fontFamily;
 
   @override
-  Widget build(BuildContext context) {
-    final suggestions = _suggestionsForLesson(lesson.title);
+  State<_LearningDialogSuggestionPanel> createState() =>
+      _LearningDialogSuggestionPanelState();
+}
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final suggestion in suggestions) ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(top: 6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF8793AE),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  suggestion,
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.55,
-                    color: const Color(0xFF4E5C79),
-                    fontFamily: fontFamily,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-        ],
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: Colors.white.withOpacity(0.58),
-          ),
-          child: Text(
-            '后续这里会接入 API 自动生成建议。',
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.5,
-              color: const Color(0xFF6A7694),
-              fontFamily: fontFamily,
-              decoration: TextDecoration.none,
-            ),
-          ),
-        ),
-      ],
+class _LearningDialogSuggestionPanelState
+    extends State<_LearningDialogSuggestionPanel> {
+  late Future<List<String>> _suggestionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _suggestionsFuture = _loadSuggestions();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LearningDialogSuggestionPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.lesson.title != widget.lesson.title ||
+        oldWidget.lesson.subtitle != widget.lesson.subtitle ||
+        oldWidget.lesson.description != widget.lesson.description) {
+      _suggestionsFuture = _loadSuggestions();
+    }
+  }
+
+  Future<List<String>> _loadSuggestions() {
+    return CourseAdviceService.instance.fetchSuggestions(
+      title: widget.lesson.title,
+      subtitle: widget.lesson.subtitle,
+      description: widget.lesson.description,
     );
   }
 
-  List<String> _suggestionsForLesson(String title) {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<String>>(
+      future: _suggestionsFuture,
+      builder: (context, snapshot) {
+        final suggestions = snapshot.data?.isNotEmpty == true
+            ? snapshot.data!
+            : _fallbackSuggestionsForLesson(widget.lesson.title);
+        final errorText = snapshot.hasError
+            ? snapshot.error.toString().replaceFirst('Exception: ', '')
+            : null;
+        final statusText = snapshot.connectionState == ConnectionState.waiting
+            ? '正在生成动作建议...'
+            : snapshot.hasError
+                ? 'API 获取失败，已切换为本地建议。${errorText == null || errorText.isEmpty ? '' : ' 原因：$errorText'}'
+                : '已生成课程动作建议。';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final suggestion in suggestions) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(top: 6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF8793AE),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      suggestion,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.55,
+                        color: const Color(0xFF4E5C79),
+                        fontFamily: widget.fontFamily,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                color: Colors.white.withOpacity(0.58),
+              ),
+              child: Row(
+                children: [
+                  if (snapshot.connectionState == ConnectionState.waiting) ...[
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF7A86A3),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        color: const Color(0xFF6A7694),
+                        fontFamily: widget.fontFamily,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<String> _fallbackSuggestionsForLesson(String title) {
     switch (title) {
       case '我':
         return const [
