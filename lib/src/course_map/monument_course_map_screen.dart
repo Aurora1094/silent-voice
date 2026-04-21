@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -22,6 +22,7 @@ class CourseMapLesson {
   final double xAlign;
   final double top;
   final CourseMapLessonState state;
+  final bool learned;
 
   const CourseMapLesson({
     required this.chapter,
@@ -37,6 +38,7 @@ class CourseMapLesson {
     required this.xAlign,
     required this.top,
     required this.state,
+    this.learned = false,
   });
 
   bool get locked => state == CourseMapLessonState.locked;
@@ -57,6 +59,7 @@ class CourseMapLesson {
     double? xAlign,
     double? top,
     CourseMapLessonState? state,
+    bool? learned,
   }) {
     return CourseMapLesson(
       chapter: chapter ?? this.chapter,
@@ -72,6 +75,7 @@ class CourseMapLesson {
       xAlign: xAlign ?? this.xAlign,
       top: top ?? this.top,
       state: state ?? this.state,
+      learned: learned ?? this.learned,
     );
   }
 
@@ -89,13 +93,28 @@ class CourseMapLesson {
   }
 }
 
+extension CourseMapLessonDisplayX on CourseMapLesson {
+  String get displayStatusLabel {
+    if (state == CourseMapLessonState.completed) {
+      return '已完成';
+    }
+    if (state == CourseMapLessonState.current) {
+      return '学习中';
+    }
+    if (state == CourseMapLessonState.upcoming) {
+      return learned ? '已学习' : '待开始';
+    }
+    return '未解锁';
+  }
+}
+
 const List<CourseMapLesson> courseMapLessons = [
   CourseMapLesson(
     chapter: '第一章',
     title: '我',
     subtitle: '自我指向',
     duration: '06 min',
-    description: '从指向自身的动作开始，建立最基础的人称表达。',
+    description: '单手伸出食指，轻轻指向自己胸前。',
     icon: Icons.person_rounded,
     progressLabel: '起始课程',
     difficulty: '入门',
@@ -110,7 +129,7 @@ const List<CourseMapLesson> courseMapLessons = [
     title: '爱',
     subtitle: '情感表达',
     duration: '08 min',
-    description: '把胸前动作和情绪感受联系起来，让表达更自然。',
+    description: '双手配合，一手突出拇指，另一手靠近并轻扫。',
     icon: Icons.favorite_outline_rounded,
     progressLabel: '发音与节奏',
     difficulty: '入门',
@@ -125,7 +144,7 @@ const List<CourseMapLesson> courseMapLessons = [
     title: '南',
     subtitle: '方向方位',
     duration: '07 min',
-    description: '练习方向类手势的落点和转向，建立空间感知。',
+    description: '单手四指并拢向下，拇指收起，保持手形稳定。',
     icon: Icons.explore_rounded,
     progressLabel: '当前学习',
     difficulty: '基础',
@@ -140,7 +159,7 @@ const List<CourseMapLesson> courseMapLessons = [
     title: '开',
     subtitle: '动作展开',
     duration: '09 min',
-    description: '练习张开的轨迹和停顿，让手势结构更清晰完整。',
+    description: '双手先靠近放好，再向左右两侧明确拉开。',
     icon: Icons.pan_tool_alt_rounded,
     progressLabel: '下一节',
     difficulty: '基础',
@@ -155,7 +174,7 @@ const List<CourseMapLesson> courseMapLessons = [
     title: '你好',
     subtitle: '基础问候',
     duration: '07 min',
-    description: '回到常用问候动作，练习节奏和起手位置的稳定性。',
+    description: '单手先做指向动作，再切换到后半段手形。',
     icon: Icons.front_hand_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
@@ -170,7 +189,7 @@ const List<CourseMapLesson> courseMapLessons = [
     title: '谢谢',
     subtitle: '礼貌回应',
     duration: '09 min',
-    description: '练习从下巴前方送出的轨迹，让感谢表达更稳定柔和。',
+    description: '单手做出拇指手形，向下送出一个清楚动作。',
     icon: Icons.favorite_outline_rounded,
     progressLabel: '可直接学习',
     difficulty: '进阶',
@@ -185,7 +204,7 @@ const List<CourseMapLesson> courseMapLessons = [
     title: '没有',
     subtitle: '缺失表达',
     duration: '06 min',
-    description: '把否定延展成更完整的语义，让动作表达更加明确。',
+    description: '拇指、食指和中指靠拢，做清楚的捻合动作。',
     icon: Icons.block_rounded,
     progressLabel: '可直接学习',
     difficulty: '基础',
@@ -201,12 +220,14 @@ class MonumentCourseMapScreen extends StatefulWidget {
   final List<CourseMapLesson> lessons;
   final ValueChanged<int> onTabChanged;
   final ValueChanged<int> onStartLesson;
+  final ValueChanged<int> onLessonPassed;
 
   const MonumentCourseMapScreen({
     super.key,
     required this.lessons,
     required this.onTabChanged,
     required this.onStartLesson,
+    required this.onLessonPassed,
   });
 
   @override
@@ -511,15 +532,6 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                 ),
               ),
             ),
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: viewPadding.bottom + 14,
-              child: _CourseMapBottomNav(
-                currentIndex: 1,
-                onChanged: widget.onTabChanged,
-              ),
-            ),
           ],
         );
       },
@@ -580,10 +592,11 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                   return Align(
                     alignment: Alignment.topCenter,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 18),
                       child: _LearningDialogShell(
                         lesson: lesson,
                         maxHeight: dialogMaxHeight,
+                        onLessonPassed: () => widget.onLessonPassed(index),
                       ),
                     ),
                   );
@@ -623,10 +636,12 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
 class _LearningDialogShell extends StatelessWidget {
   final CourseMapLesson lesson;
   final double maxHeight;
+  final VoidCallback onLessonPassed;
 
   const _LearningDialogShell({
     required this.lesson,
     required this.maxHeight,
+    required this.onLessonPassed,
   });
 
   @override
@@ -642,7 +657,7 @@ class _LearningDialogShell extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 18),
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -695,7 +710,7 @@ class _LearningDialogShell extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
                       lesson.title,
                       style: TextStyle(
@@ -706,12 +721,13 @@ class _LearningDialogShell extends StatelessWidget {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     _LearningDialogSection(
                       fontFamily: fontFamily,
                       child: EmbeddedCameraPreview(
                         targetLabel: lesson.title,
                         compact: true,
+                        onTargetPassed: onLessonPassed,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -1214,14 +1230,6 @@ class _CourseSummaryHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    '${(progress * 100).round()}%',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF28324E),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1378,7 +1386,7 @@ class _CourseInfoCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      lesson.stateLabel,
+                      lesson.displayStatusLabel,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1518,7 +1526,7 @@ class _CourseInfoCard extends StatelessWidget {
                         child: Text(
                           lesson.locked
                               ? '完成前置课程后解锁'
-                              : lesson.state == CourseMapLessonState.completed
+                              : lesson.learned
                                   ? '设为复习课程'
                                   : '开始学习',
                           style: TextStyle(
@@ -1808,7 +1816,7 @@ class _CourseMapNodeState extends State<_CourseMapNode>
     final lesson = widget.lesson;
     final selected = widget.selected;
     final locked = lesson.locked;
-    final completed = lesson.state == CourseMapLessonState.completed;
+    final completed = lesson.learned;
 
     return AnimatedBuilder(
       animation: _controller,
@@ -2957,3 +2965,4 @@ class _PrimaryBridgeOverlayPainter extends CustomPainter {
   bool shouldRepaint(covariant _PrimaryBridgeOverlayPainter oldDelegate) =>
       false;
 }
+

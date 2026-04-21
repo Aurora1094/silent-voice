@@ -26,10 +26,12 @@ class EmbeddedCameraPreview extends StatefulWidget {
     super.key,
     this.targetLabel,
     this.compact = false,
+    this.onTargetPassed,
   });
 
   final String? targetLabel;
   final bool compact;
+  final VoidCallback? onTargetPassed;
 
   @override
   State<EmbeddedCameraPreview> createState() => _EmbeddedCameraPreviewState();
@@ -50,6 +52,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
   bool _isInitializingCamera = false;
   bool _isRecognitionRunning = false;
   bool _cameraVisible = false;
+  bool _hasPassedTarget = false;
 
   bool get _hasTarget =>
       widget.targetLabel != null && widget.targetLabel!.trim().isNotEmpty;
@@ -210,6 +213,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
       setState(() {
         _isRecognitionRunning = true;
         _latestSignResult = null;
+        _hasPassedTarget = false;
         _statusMessage = _runningMessage;
       });
     } catch (error) {
@@ -249,13 +253,18 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
 
     final signResult = _signRecognizer.process(result);
     final matched = _matchesTarget(signResult);
+    final shouldNotifyPass = matched && !_hasPassedTarget;
     setState(() {
       _latestRecognition = result;
       _latestSignResult = signResult;
-      if (matched) {
+      if (matched || _hasPassedTarget) {
+        _hasPassedTarget = true;
         _statusMessage = '识别成功：${widget.targetLabel}，本次已过关。';
       }
     });
+    if (shouldNotifyPass) {
+      widget.onTargetPassed?.call();
+    }
   }
 
   void _handleRecognitionError(Object error) {
@@ -369,11 +378,11 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
     final signResult = _latestSignResult;
     final previewText = switch ((signResult, _hasTarget, widget.compact)) {
       (null, true, true) => '目标：${widget.targetLabel}',
-      (_, true, true) when _matchesTarget(signResult) => '已过关',
+      (_, true, true) when _hasPassedTarget || _matchesTarget(signResult) => '已过关',
       (_, true, true) => '当前：${signResult!.label}',
       (null, true, false) => '目标动作：${widget.targetLabel}，做对即可过关。',
       (null, false, _) => '相机预览正常，可以开始识别。',
-      (_, true, false) when _matchesTarget(signResult) =>
+      (_, true, false) when _hasPassedTarget || _matchesTarget(signResult) =>
         '识别成功：${widget.targetLabel}，本次已过关。',
       (_, true, false) =>
         '当前识别：${signResult!.label}，继续调整到“${widget.targetLabel}”。',
@@ -511,11 +520,6 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
               style: const TextStyle(fontSize: 12, color: Color(0xFF5F678F)),
             ),
           ],
-          const SizedBox(height: 4),
-          Text(
-            "当前支持：${HandSignRecognizer.supportedLabels.join(' / ')}",
-            style: const TextStyle(fontSize: 12, color: Color(0xFF5F678F)),
-          ),
         ],
       ),
     );
@@ -525,12 +529,13 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
     final rawResult = _latestRecognition;
     final signResult = _latestSignResult;
     final matched = _matchesTarget(signResult);
-    final statusText = switch ((signResult, matched)) {
+    final passed = _hasPassedTarget || matched;
+    final statusText = switch ((signResult, passed)) {
       (_, true) => '已过关',
       (null, _) => _isRecognitionRunning ? '识别中' : '待开始',
       _ => '继续调整',
     };
-    final statusColor = matched
+    final statusColor = passed
         ? const Color(0xFF3E8F68)
         : _isRecognitionRunning
             ? const Color(0xFFDA8A4A)
@@ -566,7 +571,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
             Text(
               signResult == null
                   ? _statusMessage
-                  : matched
+                  : passed
                       ? '识别结果稳定命中“${widget.targetLabel}”，这次已经过关。'
                       : '当前识别到“${signResult.label}”，继续调整到目标动作“${widget.targetLabel}”。',
               style: const TextStyle(

@@ -9,7 +9,6 @@ class ImmersiveHomeScreen extends StatelessWidget {
   final VoidCallback onPracticeTap;
   final VoidCallback onLessonsTap;
   final VoidCallback onStoryTap;
-  final Widget bottomNav;
 
   const ImmersiveHomeScreen({
     super.key,
@@ -17,7 +16,6 @@ class ImmersiveHomeScreen extends StatelessWidget {
     required this.onPracticeTap,
     required this.onLessonsTap,
     required this.onStoryTap,
-    required this.bottomNav,
   });
 
   @override
@@ -32,8 +30,7 @@ class ImmersiveHomeScreen extends StatelessWidget {
         final gap = extraCompact ? 8.0 : 12.0;
         final horizontalPadding = compact ? 18.0 : 20.0;
         final topInset = viewPadding.top + (compact ? 10.0 : 16.0);
-        final navBottomInset = viewPadding.bottom + 14.0;
-        final contentBottomInset = navBottomInset + (compact ? 88.0 : 94.0);
+        final contentBottomInset = viewPadding.bottom + (compact ? 108.0 : 116.0);
         final buttonHeight = compact ? 50.0 : 58.0;
         final availableHeight =
             constraints.maxHeight - topInset - contentBottomInset;
@@ -141,12 +138,6 @@ class ImmersiveHomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-              left: horizontalPadding,
-              right: horizontalPadding,
-              bottom: navBottomInset,
-              child: bottomNav,
-            ),
           ],
         );
       },
@@ -194,25 +185,10 @@ class _LearningProgress {
           orElse: () => null,
         );
 
-    double score = 0;
-    for (final lesson in lessons) {
-      switch (lesson.state) {
-        case CourseMapLessonState.completed:
-          score += 1;
-          break;
-        case CourseMapLessonState.current:
-          score += lesson.progressValue.clamp(0.0, 1.0);
-          break;
-        case CourseMapLessonState.upcoming:
-          score += lesson.progressValue.clamp(0.0, 0.2);
-          break;
-        case CourseMapLessonState.locked:
-          break;
-      }
-    }
-
     return _LearningProgress(
-      overallValue: (score / lessons.length).clamp(0.0, 1.0),
+      overallValue: lessons.isEmpty
+          ? 0
+          : (completedCount / lessons.length).clamp(0.0, 1.0),
       completedCount: completedCount,
       totalCount: lessons.length,
       unlockedCount: unlockedCount,
