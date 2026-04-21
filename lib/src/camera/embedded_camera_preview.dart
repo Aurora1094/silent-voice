@@ -46,7 +46,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
   StreamSubscription<RecognitionResult>? _recognitionSubscription;
 
   _PreviewStatus _status = _PreviewStatus.idle;
-  String _statusMessage = '轻点下方按钮，开始相机预览。';
+  String _statusMessage = '';
   RecognitionResult? _latestRecognition;
   HandSignResult? _latestSignResult;
   bool _isInitializingCamera = false;
@@ -346,18 +346,25 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
   }
 
   Widget _buildPreviewCard() {
+    final isIdle = _status == _PreviewStatus.idle;
+
     return Container(
       height: widget.compact ? 280 : 470,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF17263B), Color(0xFF0F1725)],
+          colors: isIdle
+              ? const [Color(0xFFF7F1FF), Color(0xFFFFF2EA)]
+              : const [Color(0xFF17263B), Color(0xFF0F1725)],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E3557).withOpacity(0.16),
+            color: (isIdle
+                    ? const Color(0xFFB9B7D6)
+                    : const Color(0xFF2E3557))
+                .withOpacity(0.16),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -419,6 +426,10 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
   Widget _buildFallback({bool showProgress = false}) {
     final showSettingsAction =
         _status == _PreviewStatus.permissionPermanentlyDenied;
+    final isIdle = _status == _PreviewStatus.idle;
+    final primaryColor = isIdle ? const Color(0xFF5F678F) : Colors.white;
+    final secondaryColor =
+        isIdle ? const Color(0xFF7A86A3) : Colors.white.withOpacity(0.72);
 
     final icon = switch (_status) {
       _PreviewStatus.idle => Icons.videocam_outlined,
@@ -430,6 +441,13 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
       _PreviewStatus.ready => Icons.videocam_outlined,
     };
 
+    if (isIdle) {
+      return _buildIdleFallback(
+        icon: icon,
+        primaryColor: primaryColor,
+      );
+    }
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -437,14 +455,14 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
           mainAxisSize: MainAxisSize.min,
           children: [
             if (showProgress)
-              const CircularProgressIndicator(color: Colors.white)
+              CircularProgressIndicator(color: primaryColor)
             else
-              Icon(icon, size: 42, color: Colors.white70),
+              Icon(icon, size: 42, color: primaryColor),
             const SizedBox(height: 14),
             Text(
               _statusMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: primaryColor, fontSize: 14),
             ),
             if (_status == _PreviewStatus.idle) ...[
               const SizedBox(height: 10),
@@ -452,7 +470,7 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
                 '准备好时再打开就好，不会打断当前练习。',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.72),
+                  color: secondaryColor,
                   fontSize: 12,
                 ),
               ),
@@ -483,6 +501,49 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
     );
   }
 
+  Widget _buildIdleFallback({
+    required IconData icon,
+    required Color primaryColor,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.48),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.62),
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 28,
+                color: primaryColor.withOpacity(0.92),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '轻点下方按钮后开始练习。',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: primaryColor.withOpacity(0.82),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoCard() {
     if (widget.compact && _hasTarget) {
       return const SizedBox.shrink();
@@ -497,6 +558,13 @@ class _EmbeddedCameraPreviewState extends State<EmbeddedCameraPreview>
     final handednessText = signResult == null || signResult.handedness.isEmpty
         ? '无'
         : signResult.handedness.join(', ');
+
+    if (_status == _PreviewStatus.idle &&
+        signResult == null &&
+        rawResult == null &&
+        _statusMessage.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),

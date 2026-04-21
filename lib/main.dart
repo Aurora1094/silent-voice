@@ -240,7 +240,7 @@ class PracticeScreen extends StatelessWidget {
             title: '手语识别',
             subtitle: '',
           ),
-          SizedBox(height: 14),
+          SizedBox(height: 8),
           _GlassCard(
             padding: EdgeInsets.all(18),
             child: Column(
@@ -360,6 +360,8 @@ class _ScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasSubtitle = subtitle.trim().isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -381,15 +383,17 @@ class _ScreenHeader extends StatelessWidget {
             color: Color(0xFF27314F),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          subtitle,
-          style: const TextStyle(
-            fontSize: 13,
-            height: 1.6,
-            color: Color(0xFF66708D),
+        if (hasSubtitle) ...[
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.6,
+              color: Color(0xFF66708D),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
