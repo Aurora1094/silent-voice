@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../camera/embedded_camera_preview.dart';
 import 'course_advice_service.dart';
@@ -815,8 +816,20 @@ class _LearningDialogIllustrationPlaceholder extends StatelessWidget {
   final CourseMapLesson lesson;
   final String? fontFamily;
 
+  static const Map<String, String> _lessonSvgAssets = <String, String>{
+    '我': 'assets/fig/wo.svg',
+    '爱': 'assets/fig/ai.svg',
+    '南': 'assets/fig/nan.svg',
+    '开': 'assets/fig/kai.svg',
+    '你好': 'assets/fig/nihao.svg',
+    '谢谢': 'assets/fig/xiexie.svg',
+    '没有': 'assets/fig/meiyou.svg',
+  };
+
   @override
   Widget build(BuildContext context) {
+    final assetPath = _lessonSvgAssets[lesson.title];
+
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: Container(
@@ -831,41 +844,53 @@ class _LearningDialogIllustrationPlaceholder extends StatelessWidget {
             ],
           ),
         ),
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.72),
-                    ),
-                    child: Icon(
-                      lesson.icon,
-                      size: 28,
-                      color: const Color(0xFF4B5877),
-                    ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: assetPath == null
+              ? _buildFallback()
+              : Container(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: SvgPicture.asset(
+                    assetPath,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${lesson.title} 手语示意图',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF33415E),
-                      fontFamily: fontFamily,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFallback() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.72),
+            ),
+            child: Icon(
+              lesson.icon,
+              size: 28,
+              color: const Color(0xFF4B5877),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${lesson.title} 手语示意图',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF33415E),
+              fontFamily: fontFamily,
+              decoration: TextDecoration.none,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'src/camera/embedded_camera_preview.dart';
@@ -291,7 +292,7 @@ class PracticeScreen extends StatelessWidget {
   }
 }
 
-class StoryScreen extends StatelessWidget {
+class StoryScreen extends StatefulWidget {
   const StoryScreen({
     super.key,
     required this.onOpenPractice,
@@ -300,48 +301,123 @@ class StoryScreen extends StatelessWidget {
   final VoidCallback onOpenPractice;
 
   @override
+  State<StoryScreen> createState() => _StoryScreenState();
+}
+
+class _StoryScreenState extends State<StoryScreen> {
+  static const double _pullTriggerDistance = 96;
+
+  double _pullDistance = 0;
+  bool _isNavigating = false;
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (_isNavigating) {
+      return false;
+    }
+
+    if (notification is OverscrollNotification &&
+        notification.dragDetails != null &&
+        notification.metrics.pixels <= 0 &&
+        notification.overscroll < 0) {
+      final nextPullDistance = (_pullDistance - notification.overscroll)
+          .clamp(0.0, _pullTriggerDistance)
+          .toDouble();
+
+      if (nextPullDistance != _pullDistance) {
+        setState(() {
+          _pullDistance = nextPullDistance;
+        });
+      }
+
+      if (nextPullDistance >= _pullTriggerDistance) {
+        _openPractice();
+      }
+      return false;
+    }
+
+    if (notification is ScrollUpdateNotification &&
+        notification.metrics.pixels > 0 &&
+        _pullDistance != 0) {
+      setState(() {
+        _pullDistance = 0;
+      });
+      return false;
+    }
+
+    if (notification is ScrollEndNotification && _pullDistance != 0) {
+      setState(() {
+        _pullDistance = 0;
+      });
+    }
+
+    return false;
+  }
+
+  Future<void> _openPractice() async {
+    if (_isNavigating) {
+      return;
+    }
+
+    setState(() {
+      _isNavigating = true;
+      _pullDistance = _pullTriggerDistance;
+    });
+
+    await HapticFeedback.mediumImpact();
+    widget.onOpenPractice();
+
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isNavigating = false;
+      _pullDistance = 0;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.viewPaddingOf(context).top + 18;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(18, topInset, 18, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _ScreenHeader(
-            eyebrow: '品牌故事',
-            title: '让表达被看见',
-            subtitle: 'Silent Voice',
-          ),
-          const SizedBox(height: 14),
-          const _StoryHeroCard(),
-          const SizedBox(height: 14),
-          const _StoryTextCard(
-            title: '适合做成比赛项目的亮点',
-            text:
-                '1）手语识别 + 教学闭环；2）有社会关怀价值；3）手机端易落地；4）适合加入 AI 陪练、表情反馈、学习成长体系。',
-          ),
-          const SizedBox(height: 14),
-          const _StoryTextCard(
-            title: '后续技术路线',
-            text:
-                '前端负责摄像头采集与交互；CV 模块可用 MediaPipe Hands 提取关键点；分类模型可先做静态词汇识别，再升级到动态短句识别；最后加入教学内容管理和用户进度系统。',
-          ),
-          const SizedBox(height: 14),
-          const _StoryTextCard(
-            title: '一句话介绍',
-            text:
-                '一款基于计算机视觉的手机端手语教学 App，通过实时动作识别、分步示范与情境化课程，帮助更多人温柔地学会“看见彼此”。',
-          ),
-          const SizedBox(height: 14),
-          Center(
-            child: TextButton(
-              onPressed: onOpenPractice,
-              child: const Text('继续练习'),
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        padding: EdgeInsets.fromLTRB(18, topInset, 18, 88),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _StoryHeader(
+              eyebrow: '公益故事',
+              title: '让表达被看见',
+              subtitle: 'Silent Voice',
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+            const _StoryHeroCard(),
+            const SizedBox(height: 14),
+            const _StoryTextCard(
+              title: '有些距离，不是因为不想交流',
+              text:
+                  '对许多听障人士来说，困难往往不在“表达”，而在“表达没有被理解”。当习惯的沟通方式不同，误解、沉默和忽视就会悄悄出现。我们希望通过一次轻量但真实的体验，让更多同学意识到：无障碍沟通不是少数人的事，而是每个人都可以参与的公共关怀。',
+            ),
+            const SizedBox(height: 14),
+            const _StoryTextCard(
+              title: '把理解，变成一次可以参与的体验',
+              text:
+                  'Silent Voice 以基础手语学习、实时识别体验和互动反馈为入口，让第一次接触手语的人，也能在短时间里完成一次真切的尝试。我们不想只告诉你“应该关注”，而是希望你亲手做出一个动作，在体验中感受沟通的意义，在靠近中理解另一种表达方式。',
+            ),
+            const SizedBox(height: 14),
+            const _StoryTextCard(
+              title: '这次活动，想让更多人愿意靠近',
+              text:
+                  '这款 App 依托「减论」团队，作为南开大学软件学院学生会与南开大学爱心社手语部联合活动的宣传与互动入口。我们希望它帮助更多同学从“知道”走向“理解”，从“围观”走向“参与”，也让一次校园公益活动，真正成为一次关于尊重、沟通与陪伴的开始。',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -438,6 +514,56 @@ class _GlassCard extends StatelessWidget {
   }
 }
 
+class _StoryHeader extends StatelessWidget {
+  const _StoryHeader({
+    required this.eyebrow,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String eyebrow;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow,
+          style: GoogleFonts.notoSerifSc(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.6,
+            color: const Color(0xFF7B85A2),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
+          style: GoogleFonts.notoSerifSc(
+            fontSize: 32,
+            height: 1.18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF27314F),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: GoogleFonts.notoSerifSc(
+            fontSize: 13,
+            height: 1.7,
+            letterSpacing: 0.4,
+            color: const Color(0xFF66708D),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _StoryHeroCard extends StatelessWidget {
   const _StoryHeroCard();
 
@@ -447,26 +573,26 @@ class _StoryHeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '“声音并不是唯一的语言，\n手势也可以让世界安静地亮起来。”',
-                  style: TextStyle(
-                    fontSize: 20,
+                  '声音不是唯一的语言，\n沉默也不意味着\n无话可说',
+                  style: GoogleFonts.notoSerifSc(
+                    fontSize: 22,
                     height: 1.55,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF2E3557),
+                    color: const Color(0xFF2E3557),
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
-                  '“让我听见你”不是要把手语变成冷冰冰的技术展示，而是让更多人愿意靠近、理解、学习与陪伴。',
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.65,
-                    color: Color(0xFF5F678F),
+                  '我们想做的，不只是一个可以识别手势的 App，更是一份温和的邀请。邀请更多人走近听障群体，理解他们在沟通中面对的真实处境，也学会用更尊重的方式彼此看见。',
+                  style: GoogleFonts.notoSerifSc(
+                    fontSize: 13,
+                    height: 1.85,
+                    color: const Color(0xFF5F678F),
                   ),
                 ),
               ],
@@ -537,19 +663,20 @@ class _StoryTextCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
+            style: GoogleFonts.notoSerifSc(
+              fontSize: 19,
+              height: 1.45,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2E3557),
+              color: const Color(0xFF2E3557),
             ),
           ),
           const SizedBox(height: 10),
           Text(
             text,
-            style: const TextStyle(
-              fontSize: 12,
-              height: 1.65,
-              color: Color(0xFF5F678F),
+            style: GoogleFonts.notoSerifSc(
+              fontSize: 13,
+              height: 1.88,
+              color: const Color(0xFF5F678F),
             ),
           ),
         ],
