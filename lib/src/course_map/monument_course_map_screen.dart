@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../camera/embedded_camera_preview.dart';
@@ -598,7 +599,8 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
                       child: _LearningDialogShell(
                         lesson: lesson,
                         maxHeight: dialogMaxHeight,
-                        onLessonPassed: () => widget.onLessonPassed(index),
+                        onLessonPassed: () =>
+                            _handleLessonPassed(index, lesson),
                       ),
                     ),
                   );
@@ -632,6 +634,469 @@ class _MonumentCourseMapScreenState extends State<MonumentCourseMapScreen>
         );
       },
     );
+  }
+
+  void _handleLessonPassed(int index, CourseMapLesson lesson) {
+    if (!mounted) {
+      return;
+    }
+
+    widget.onLessonPassed(index);
+    unawaited(HapticFeedback.mediumImpact());
+    unawaited(_showLessonPassFeedback(index, lesson));
+  }
+
+  Future<void> _showLessonPassFeedback(
+    int index,
+    CourseMapLesson lesson,
+  ) async {
+    if (!mounted) {
+      return;
+    }
+
+    final nextLesson =
+        index + 1 < courseMapLessons.length ? courseMapLessons[index + 1] : null;
+    final shouldPromoteNext = lesson.current && nextLesson != null;
+
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'lesson-pass-feedback',
+      barrierColor: Colors.black.withOpacity(0.22),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return _LessonPassFeedbackOverlay(
+          lesson: lesson,
+          nextLesson: shouldPromoteNext ? nextLesson : null,
+          allCompleted: lesson.current && nextLesson == null,
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(
+              begin: 0.96,
+              end: 1,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LessonPassFeedbackOverlay extends StatefulWidget {
+  final CourseMapLesson lesson;
+  final CourseMapLesson? nextLesson;
+  final bool allCompleted;
+
+  const _LessonPassFeedbackOverlay({
+    required this.lesson,
+    required this.nextLesson,
+    required this.allCompleted,
+  });
+
+  @override
+  State<_LessonPassFeedbackOverlay> createState() =>
+      _LessonPassFeedbackOverlayState();
+}
+
+class _LessonPassFeedbackOverlayState
+    extends State<_LessonPassFeedbackOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  bool _dismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fontFamily = Theme.of(context).textTheme.bodyMedium?.fontFamily;
+
+    return Material(
+      type: MaterialType.transparency,
+      child: SafeArea(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _dismiss,
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final progress = _controller.value;
+              final opacity = _fadeValue(progress);
+              final scale = 0.88 + 0.12 * _curveInterval(
+                progress,
+                0,
+                0.36,
+                Curves.easeOutBack,
+              );
+              final lift = 18 * (1 - _curveInterval(
+                progress,
+                0,
+                0.42,
+                Curves.easeOutCubic,
+              ));
+
+              return Opacity(
+                opacity: opacity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        color: Colors.white.withOpacity(0.08),
+                      ),
+                    ),
+                    CustomPaint(
+                      painter: _LessonPassBurstPainter(
+                        progress: progress,
+                        colors: widget.lesson.colors,
+                      ),
+                    ),
+                    Center(
+                      child: Transform.translate(
+                        offset: Offset(0, lift),
+                        child: Transform.scale(
+                          scale: scale,
+                          child: child,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: _LessonPassCard(
+              lesson: widget.lesson,
+              nextLesson: widget.nextLesson,
+              allCompleted: widget.allCompleted,
+              fontFamily: fontFamily,
+              onContinue: _dismiss,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  double _fadeValue(double progress) {
+    return _curveInterval(progress, 0, 0.18, Curves.easeOutCubic);
+  }
+
+  double _curveInterval(
+    double value,
+    double start,
+    double end,
+    Curve curve,
+  ) {
+    if (value <= start) {
+      return 0;
+    }
+    if (value >= end) {
+      return 1;
+    }
+    return curve.transform((value - start) / (end - start));
+  }
+
+  void _dismiss() {
+    if (!mounted || _dismissed) {
+      return;
+    }
+    _dismissed = true;
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent ?? false) {
+      Navigator.of(context).maybePop();
+    }
+  }
+}
+
+class _LessonPassCard extends StatelessWidget {
+  final CourseMapLesson lesson;
+  final CourseMapLesson? nextLesson;
+  final bool allCompleted;
+  final String? fontFamily;
+  final VoidCallback onContinue;
+
+  const _LessonPassCard({
+    required this.lesson,
+    required this.nextLesson,
+    required this.allCompleted,
+    required this.fontFamily,
+    required this.onContinue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final detailText = allCompleted
+        ? '第一章已全部完成'
+        : nextLesson == null
+            ? '进度已更新'
+            : '下一关已点亮：${nextLesson!.title}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 26),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 26, 24, 22),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.92),
+                lesson.colors.last.withOpacity(0.82),
+                lesson.colors.first.withOpacity(0.52),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.86),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2E3557).withOpacity(0.18),
+                blurRadius: 34,
+                offset: const Offset(0, 18),
+              ),
+              BoxShadow(
+                color: lesson.colors.first.withOpacity(0.24),
+                blurRadius: 36,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: DefaultTextStyle.merge(
+            style: TextStyle(
+              fontFamily: fontFamily,
+              decoration: TextDecoration.none,
+              color: const Color(0xFF2E3557),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 82,
+                  height: 82,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFFFFF3C2), Color(0xFFFFD28D)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD28D).withOpacity(0.46),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 44,
+                    color: Color(0xFF6B5B37),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '本关通过',
+                  textScaler: TextScaler.noScaling,
+                  style: TextStyle(
+                    fontSize: 28,
+                    height: 1.08,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF2E3557),
+                    fontFamily: fontFamily,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '“${lesson.title}” 已识别完成',
+                  textAlign: TextAlign.center,
+                  textScaler: TextScaler.noScaling,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF5F678F),
+                    fontFamily: fontFamily,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    color: Colors.white.withOpacity(0.56),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.72),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 18,
+                        color: Color(0xFFE6A84A),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          detailText,
+                          textAlign: TextAlign.center,
+                          textScaler: TextScaler.noScaling,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.3,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF4F5C7E),
+                            fontFamily: fontFamily,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: onContinue,
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF2E3557),
+                    backgroundColor: Colors.white.withOpacity(0.64),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: Text(
+                    '继续',
+                    textScaler: TextScaler.noScaling,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: fontFamily,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LessonPassBurstPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  const _LessonPassBurstPainter({
+    required this.progress,
+    required this.colors,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final baseRadius = math.min(size.width, size.height) * 0.18;
+    final burstOpacity =
+        math.sin(progress * math.pi).clamp(0.0, 1.0).toDouble();
+    final primary = colors.isEmpty ? const Color(0xFFFFD28D) : colors.first;
+    final secondary = colors.length > 1 ? colors.last : const Color(0xFFFFF3C2);
+
+    final outerRing = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..color = primary.withOpacity(0.34 * burstOpacity);
+    final innerRing = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8
+      ..color = Colors.white.withOpacity(0.46 * burstOpacity);
+
+    canvas.drawCircle(
+      center,
+      baseRadius + 128 * progress,
+      outerRing,
+    );
+    canvas.drawCircle(
+      center,
+      baseRadius * 0.72 + 86 * progress,
+      innerRing,
+    );
+
+    final rayPaint = Paint()
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3.2;
+    final dotPaint = Paint()..style = PaintingStyle.fill;
+
+    for (var i = 0; i < 18; i++) {
+      final angle = -math.pi / 2 + (math.pi * 2 * i / 18);
+      final delay = (i % 3) * 0.05;
+      final local =
+          ((progress - delay) / (1 - delay)).clamp(0.0, 1.0).toDouble();
+      final eased = Curves.easeOutCubic.transform(local);
+      final opacity = math.sin(local * math.pi).clamp(0.0, 1.0).toDouble();
+      final distance = baseRadius + 52 + 98 * eased;
+      final rayLength = 10 + 12 * (1 - local);
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      final start = center + direction * distance;
+      final end = center + direction * (distance + rayLength);
+
+      rayPaint.color = Color.lerp(primary, secondary, i.isEven ? 0.25 : 0.72)!
+          .withOpacity(0.52 * opacity);
+      canvas.drawLine(start, end, rayPaint);
+
+      if (i.isEven) {
+        dotPaint.color = Colors.white.withOpacity(0.58 * opacity);
+        canvas.drawCircle(
+          center + direction * (distance - 18),
+          2.6 + 1.4 * (1 - local),
+          dotPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LessonPassBurstPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.colors != colors;
   }
 }
 

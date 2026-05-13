@@ -1,0 +1,402 @@
+\documentclass[UTF8,a4paper,12pt]{ctexart}
+
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric}
+
+\definecolor{SilentBlue}{HTML}{2C3553}
+\definecolor{SilentTeal}{HTML}{2E8C7A}
+\definecolor{SilentCoral}{HTML}{D77A61}
+\definecolor{SilentGold}{HTML}{C79A2B}
+\definecolor{SilentLavender}{HTML}{E7DDFB}
+\definecolor{SilentSky}{HTML}{E9F4FF}
+\definecolor{SilentInk}{HTML}{27314F}
+\definecolor{SilentGray}{HTML}{66708D}
+
+\geometry{left=2.7cm,right=2.7cm,top=2.6cm,bottom=2.6cm}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=SilentBlue,
+  urlcolor=SilentTeal,
+  citecolor=SilentBlue
+}
+
+\setlist[itemize]{leftmargin=2em,itemsep=0.25em,topsep=0.35em}
+\setlist[enumerate]{leftmargin=2em,itemsep=0.25em,topsep=0.35em}
+\renewcommand{\arraystretch}{1.25}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\projectname}{Silent Voice}
+
+\title{
+  \vspace{-1.5em}
+  \textbf{\projectname{} 项目立项书}\\
+  \large 面向校园公益活动的手语学习与实时识别应用
+}
+\author{项目团队：减论团队}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+\begin{tabularx}{0.88\textwidth}{>{\bfseries}lY}
+\toprule
+项目名称 & Silent Voice 手语学习与实时识别应用 \\
+项目类型 & 移动端交互应用 / 无障碍沟通公益技术项目 \\
+应用场景 & 校园公益宣传、手语入门教学、手语动作互动体验 \\
+建设周期 & 建议 8 周完成可展示版本，后续持续迭代识别词库与多端能力 \\
+目标用户 & 首次接触手语的学生、校园公益活动参与者、手语课程组织者 \\
+技术路线 & Flutter 跨端界面 + Android 原生相机预览 + MediaPipe 手部关键点识别 + 规则化手势分类 + AI 动作建议 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\tableofcontents
+\newpage
+
+\section{项目背景}
+
+听障群体在日常沟通中面临的困难，并不只来自表达本身，更来自表达方式未被足够理解。对于大多数未系统学习手语的学生而言，手语往往停留在“知道其存在”的层面，缺少低门槛、可参与、可反馈的体验入口。
+
+\projectname{} 旨在把手语学习从静态宣传转化为可以亲手参与的互动体验。项目依托南开大学软件学院学生会与南开大学爱心社手语部联合活动场景，以基础手语课程、实时识别练习、课程闯关地图和公益故事为主线，让用户在短时间内完成从“了解手语”到“尝试表达”的转变。
+
+从现有代码基础看，项目已经具备 Flutter 应用框架、Android 原生相机预览、MediaPipe 手部关键点模型、课程地图、手语 SVG 示意图、实时识别反馈和 AI 动作建议模块，具备继续立项完善为校园公益展示产品的技术基础。
+
+\section{项目建设目标}
+
+\subsection{总体目标}
+
+建设一款面向校园公益活动的手语学习与实时识别移动应用，通过视觉化课程、相机识别、即时反馈和活动故事降低手语入门门槛，提升普通学生对无障碍沟通议题的理解与参与意愿。
+
+\subsection{具体目标}
+
+\begin{enumerate}
+  \item 完成一套可演示、可交互的手语学习流程，覆盖首页引导、课程地图、课程学习、实时练习和公益故事。
+  \item 支持至少 7 个基础手语词汇识别，当前词汇包括“我、爱、南、开、你好、谢谢、没有”。
+  \item 接入设备相机与手部关键点检测能力，实现动作捕捉、置信度反馈、稳定识别和课程过关判定。
+  \item 通过 AI 动作建议为初学者提供手形、位置、节奏、镜头距离与稳定性方面的练习提示。
+  \item 形成可用于校园展示、路演答辩和公益活动宣传的完整产品原型与技术说明材料。
+\end{enumerate}
+
+\section{需求分析}
+
+\subsection{用户需求}
+
+\begin{table}[htbp]
+\centering
+\caption{核心用户需求分析}
+\begin{tabularx}{\textwidth}{p{3.1cm}Y Y}
+\toprule
+用户角色 & 主要需求 & 对应功能 \\
+\midrule
+普通学生 & 快速理解活动主题，低压力尝试基础手语动作 & 沉浸式首页、公益故事、基础课程入口 \\
+初学者 & 看得懂动作、能跟练、能知道自己是否做对 & 手语示意图、实时相机识别、置信度与过关反馈 \\
+活动组织者 & 需要稳定、直观、适合现场展示的互动环节 & 课程地图、闯关机制、实时练习页面 \\
+后续维护者 & 需要可扩展词库、可替换模型、可维护架构 & Flutter 分层模块、平台通道、识别规则模块 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{功能需求}
+
+项目功能可划分为四个层次：内容展示、课程学习、实时识别和智能辅助。首页负责建立活动氛围与任务入口；课程地图负责承载学习进度与章节路径；练习页负责摄像头识别与反馈；故事页负责解释公益价值和活动背景。
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=1.05cm,
+  module/.style={rounded corners=6pt, draw=SilentBlue, thick, align=center, minimum width=3.15cm, minimum height=1.05cm, fill=SilentSky},
+  core/.style={rounded corners=8pt, draw=SilentTeal, very thick, align=center, minimum width=4cm, minimum height=1.2cm, fill=SilentLavender},
+  arrow/.style={-{Latex[length=2.2mm]}, thick, draw=SilentGray}
+]
+\node[core] (app) {\textbf{Silent Voice}\\手语学习与识别应用};
+\node[module, below left=1.05cm and 1.7cm of app] (home) {沉浸式首页\\活动入口};
+\node[module, below=1.05cm of app] (course) {课程地图\\闯关进度};
+\node[module, below right=1.05cm and 1.7cm of app] (practice) {实时练习\\相机识别};
+\node[module, below=1.05cm of course] (story) {公益故事\\价值传播};
+\node[module, left=1.4cm of story] (advice) {AI 动作建议\\学习反馈};
+\node[module, right=1.4cm of story] (assets) {模型与素材\\课程插图};
+\draw[arrow] (app) -- (home);
+\draw[arrow] (app) -- (course);
+\draw[arrow] (app) -- (practice);
+\draw[arrow] (course) -- (story);
+\draw[arrow] (course) -- (advice);
+\draw[arrow] (practice) -- (assets);
+\draw[arrow] (advice) -- (practice);
+\end{tikzpicture}
+\caption{项目功能结构图}
+\label{fig:function-map}
+\end{figure}
+
+\subsection{非功能需求}
+
+\begin{itemize}
+  \item \textbf{易用性：} 面向零基础用户，操作流程应保持短路径，课程与练习入口清晰可见。
+  \item \textbf{实时性：} 手势识别反馈应具备现场演示可用的响应速度，避免过长等待。
+  \item \textbf{稳定性：} 相机权限、无摄像头、识别失败、网络异常等状态需有明确提示。
+  \item \textbf{可维护性：} 课程内容、识别词汇、模型文件和动作建议逻辑应尽量模块化。
+  \item \textbf{隐私性：} 相机画面应优先本地处理，若后续涉及云端分析，需明确告知并获得授权。
+\end{itemize}
+
+\section{建设内容}
+
+\subsection{首页与活动叙事}
+
+首页采用沉浸式视觉风格，设置“开始练习”“课程地图”等主要入口，并展示今日学习进度。故事页围绕“让表达被看见”的主题，说明项目与校园公益活动的关系，增强用户对无障碍沟通的理解。
+
+\subsection{课程地图与学习路径}
+
+课程地图以章节路线形式组织基础词汇，当前课程包括“我、爱、南、开、你好、谢谢、没有”。每个课程包含词语、标签、时长、动作描述、难度、示意图和进度状态。用户点击课程后可进入学习弹窗，在同一界面完成动作查看、建议阅读和实时识别。
+
+\subsection{实时识别练习}
+
+实时练习模块通过 Android 原生相机预览获取画面，使用 MediaPipe Hand Landmarker 提取手部关键点，再由 Flutter 侧规则识别器完成词汇判定。识别结果包括词汇标签、置信度、左右手信息、稳定状态和过关反馈。
+
+\subsection{AI 动作建议}
+
+项目内置课程动作建议服务，根据课程词语、课程标签和基础动作描述生成 2 至 3 条中文练习建议。建议内容聚焦手形、位置、节奏、镜头距离和稳定性，帮助初学者在练习时获得更具体的改进方向。
+
+\section{技术路线}
+
+\subsection{总体架构}
+
+项目采用 Flutter 作为跨端界面层，Android 侧提供相机预览、CameraX 接入和 MediaPipe 模型推理能力。Flutter 与原生层之间通过 MethodChannel 和 EventChannel 通信，前者负责初始化、启动和停止识别，后者负责持续传递识别结果。
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  layer/.style={rounded corners=7pt, draw=SilentBlue, thick, fill=white, minimum width=12.2cm, minimum height=1.2cm, align=center},
+  block/.style={rounded corners=5pt, draw=SilentTeal, thick, fill=SilentSky, minimum width=2.75cm, minimum height=0.82cm, align=center},
+  arrow/.style={-{Latex[length=2.2mm]}, thick, draw=SilentGray}
+]
+\node[layer] (ui) at (0,0) {\textbf{Flutter 表现层：} 首页、课程地图、学习弹窗、实时练习、公益故事};
+\node[layer] (logic) at (0,-1.75) {\textbf{Dart 业务层：} 课程状态、进度记录、动作建议、手势特征提取与规则分类};
+\node[layer] (channel) at (0,-3.5) {\textbf{平台通道层：} MethodChannel 控制识别生命周期，EventChannel 推送识别结果};
+\node[layer] (native) at (0,-5.25) {\textbf{Android 原生层：} CameraX 原生预览、MediaPipe Hand Landmarker、结果封装};
+\node[block] (camera) at (-4.35,-6.85) {设备摄像头};
+\node[block] (model) at (0,-6.85) {hand\_landmarker.task};
+\node[block] (assets) at (4.35,-6.85) {手语 SVG 素材};
+\draw[arrow] (ui) -- (logic);
+\draw[arrow] (logic) -- (channel);
+\draw[arrow] (channel) -- (native);
+\draw[arrow] (camera) -- (native);
+\draw[arrow] (model) -- (native);
+\draw[arrow] (assets) -- (ui);
+\end{tikzpicture}
+\caption{技术架构图}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{关键技术选型}
+
+\begin{table}[htbp]
+\centering
+\caption{技术选型与作用}
+\begin{tabularx}{\textwidth}{p{3.3cm}p{4cm}Y}
+\toprule
+技术或组件 & 当前应用方式 & 作用说明 \\
+\midrule
+Flutter & 应用主体框架 & 构建跨端界面、课程地图、状态管理和交互逻辑 \\
+Material 3 & UI 基础能力 & 提供现代移动端控件与主题能力 \\
+Google Fonts & 中文字体主题 & 提升整体视觉统一性和展示质感 \\
+CameraX & Android 原生相机能力 & 支撑稳定的原生相机预览和图像帧处理 \\
+MediaPipe Tasks Vision & 手部关键点检测 & 使用 hand\_landmarker.task 提取 21 点手部关键点 \\
+MethodChannel / EventChannel & Flutter 与 Android 通信 & 控制识别生命周期并推送实时识别结果 \\
+规则化识别器 & Dart 侧手势分类 & 基于手形、位置、运动方向和历史帧稳定识别词汇 \\
+豆包 API & 课程动作建议 & 生成面向初学者的动作改进提示 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{识别流程}
+
+\begin{enumerate}
+  \item 用户打开课程或练习页，应用申请相机权限并显示原生相机预览。
+  \item Android 原生层加载 MediaPipe 手部关键点模型，对相机帧进行检测。
+  \item 原生层将手部关键点、左右手、帧尺寸、时间戳等信息通过 EventChannel 传回 Flutter。
+  \item Dart 侧特征提取器计算手形、指尖距离、手掌朝向、运动方向、双手距离等特征。
+  \item 规则识别器对支持词汇评分，并结合最近多帧结果进行稳定化处理。
+  \item 若稳定识别结果与课程目标一致，课程被标记为通过，学习进度随之推进。
+\end{enumerate}
+
+\section{创新点与特色}
+
+\begin{itemize}
+  \item \textbf{公益叙事与技术互动结合：} 项目不是单纯展示页，而是把公益故事、课程学习和实时体验连成闭环。
+  \item \textbf{低门槛手语入门：} 以 7 个基础高频词汇切入，降低首次接触手语的心理和学习成本。
+  \item \textbf{可视化课程地图：} 用路线式课程地图替代线性列表，增强学习目标感和现场展示效果。
+  \item \textbf{端侧识别链路：} 相机画面优先在本地通过 MediaPipe 提取关键点，减少对云端图像识别的依赖。
+  \item \textbf{AI 辅助练习：} 通过自动生成动作建议，为每个词汇提供更细粒度的练习指导。
+\end{itemize}
+
+\section{可行性分析}
+
+\subsection{技术可行性}
+
+项目已具备 Flutter 前端、Android 原生预览、MediaPipe 模型、平台通道、课程资源和规则识别器等核心代码基础。现阶段的技术难点主要集中在识别准确率、不同设备摄像头兼容性、权限状态处理和课程内容扩展。上述问题均可通过测试样本积累、规则阈值调优、异常状态兜底和模块化课程配置逐步解决。
+
+\subsection{组织可行性}
+
+项目面向明确的校园公益活动场景，需求边界清晰，首期只需覆盖基础词汇和可演示流程。团队可按“产品与内容、Flutter 前端、Android 识别、测试与展示”分工推进，适合小团队在短周期内完成。
+
+\subsection{应用可行性}
+
+项目的展示方式适合线下展台、课堂体验、社团活动和软件工程课程展示。用户只需使用手机摄像头即可参与互动，学习成本低，传播主题明确。
+
+\section{实施计划}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  scale=0.92,
+  every node/.style={font=\small},
+  bar/.style={rounded corners=3pt, minimum height=0.55cm, anchor=west},
+  axis/.style={draw=SilentGray, thick}
+]
+\draw[axis] (0,0) -- (12.2,0);
+\foreach \x/\week in {0/第1周,1.7/第2周,3.4/第3周,5.1/第4周,6.8/第5周,8.5/第6周,10.2/第7周,11.9/第8周} {
+  \draw[SilentGray] (\x,0.08) -- (\x,-0.08);
+  \node[below] at (\x,-0.12) {\week};
+}
+\node[left] at (-0.15,-0.9) {需求与内容};
+\node[bar, fill=SilentLavender, minimum width=3.2cm] at (0,-0.9) {需求梳理、课程脚本、活动文案};
+\node[left] at (-0.15,-1.75) {界面开发};
+\node[bar, fill=SilentSky, minimum width=5.0cm] at (1.0,-1.75) {首页、课程地图、学习弹窗、故事页};
+\node[left] at (-0.15,-2.6) {识别链路};
+\node[bar, fill=SilentLavender, minimum width=5.1cm] at (2.2,-2.6) {相机、MediaPipe、平台通道、规则调优};
+\node[left] at (-0.15,-3.45) {联调测试};
+\node[bar, fill=SilentSky, minimum width=3.5cm] at (6.0,-3.45) {真机测试、异常处理、性能优化};
+\node[left] at (-0.15,-4.3) {展示交付};
+\node[bar, fill=SilentLavender, minimum width=2.8cm] at (9.0,-4.3) {演示脚本、答辩材料、发布包};
+\end{tikzpicture}
+}
+\caption{建议实施进度安排}
+\label{fig:timeline}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{阶段任务与交付物}
+\begin{tabularx}{\textwidth}{p{2.2cm}Y Y}
+\toprule
+阶段 & 主要任务 & 交付物 \\
+\midrule
+第 1--2 周 & 明确活动场景、目标用户、课程词汇、手语动作说明和视觉风格 & 需求说明、课程清单、展示脚本初稿 \\
+第 3--4 周 & 完善 Flutter 页面、课程地图、学习弹窗、课程进度和素材展示 & 可操作 UI 原型、课程资源包 \\
+第 5--6 周 & 联通 Android 相机、MediaPipe 模型、识别事件流和 Dart 规则识别器 & 可运行识别版本、基础词汇识别能力 \\
+第 7 周 & 真机测试、识别阈值调优、权限异常处理、AI 建议兜底逻辑完善 & 测试记录、稳定演示版本 \\
+第 8 周 & 打包展示版本，整理立项书、技术说明、演示视频或答辩材料 & APK/演示包、项目文档、答辩材料 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{组织分工}
+
+\begin{table}[htbp]
+\centering
+\caption{建议团队分工}
+\begin{tabularx}{\textwidth}{p{3cm}Y}
+\toprule
+角色 & 职责 \\
+\midrule
+项目负责人 & 统筹需求范围、进度、展示目标和最终交付质量 \\
+产品与内容负责人 & 设计课程词汇、动作描述、公益故事、活动介绍和演示流程 \\
+Flutter 开发负责人 & 实现首页、课程地图、学习弹窗、练习页、状态流转和界面适配 \\
+Android/算法负责人 & 维护相机预览、MediaPipe 模型接入、平台通道和识别性能 \\
+测试与展示负责人 & 完成真机测试、问题记录、现场演示脚本和答辩材料整理 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{风险分析与应对措施}
+
+\begin{table}[htbp]
+\centering
+\caption{主要风险与应对策略}
+\begin{tabularx}{\textwidth}{p{3.2cm}Y Y}
+\toprule
+风险 & 影响 & 应对措施 \\
+\midrule
+识别准确率不足 & 用户做出动作后无法稳定过关，影响现场体验 & 限定首期词库，增加多帧稳定判断，收集样本调优规则阈值 \\
+设备兼容性差异 & 不同 Android 机型相机方向、分辨率、性能表现不一致 & 优先适配活动演示设备，记录机型差异，增加权限与无摄像头兜底提示 \\
+网络服务不可用 & AI 动作建议无法实时生成 & 保留本地默认建议，接口失败时不阻断课程学习流程 \\
+隐私与权限顾虑 & 用户对摄像头使用产生担忧 & 明确相机用途，优先端侧处理，不存储用户画面 \\
+测试覆盖不足 & 后续迭代容易引入回归问题 & 补充识别规则单元测试、页面烟测和真机测试清单 \\
+密钥管理不规范 & API Key 泄露或滥用 & 将密钥迁移到环境变量或后端代理，避免硬编码在客户端代码中 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{经费与资源预算}
+
+项目首期以软件研发和校园展示为主，主要成本集中在开发设备、测试设备、活动展示物料和可选云端服务调用。若作为课程项目或社团活动项目推进，可优先使用已有设备与免费开发工具，降低启动成本。
+
+\begin{table}[htbp]
+\centering
+\caption{初步资源预算}
+\begin{tabularx}{\textwidth}{p{3cm}p{3cm}Y}
+\toprule
+资源类型 & 预算建议 & 说明 \\
+\midrule
+开发设备 & 0--3000 元 & 使用已有电脑和 Android 真机，必要时补充测试机 \\
+云端 API & 0--500 元 & AI 动作建议接口调用，首期可控制在低频调用范围 \\
+展示物料 & 200--800 元 & 展板、二维码、宣传单页、现场引导卡片 \\
+测试与调研 & 0--500 元 & 参与者反馈收集、小规模用户测试激励 \\
+合计 & 200--4800 元 & 视已有设备与活动规模调整 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{预期成果}
+
+\begin{enumerate}
+  \item 一款可在 Android 设备上运行的 \projectname{} 手语学习与识别应用。
+  \item 一套包含 7 个基础词汇的课程地图、动作说明、示意素材和实时识别练习流程。
+  \item 一条完整的端侧手部关键点识别与 Flutter 交互反馈链路。
+  \item 一份可用于立项、答辩和展示的项目文档与技术说明。
+  \item 一套后续扩展方案，包括词库扩展、识别模型优化、iOS 支持、用户数据统计和无障碍设计增强。
+\end{enumerate}
+
+\section{验收标准}
+
+\begin{table}[htbp]
+\centering
+\caption{项目验收指标}
+\begin{tabularx}{\textwidth}{p{3cm}Y p{3.2cm}}
+\toprule
+类别 & 验收内容 & 验收方式 \\
+\midrule
+功能完整性 & 首页、课程地图、课程学习、实时练习、公益故事均可进入并完成主要流程 & 现场演示与功能检查 \\
+识别能力 & 支持“我、爱、南、开、你好、谢谢、没有”等基础词汇识别与过关反馈 & 真机测试与样例动作演示 \\
+交互体验 & 相机权限、识别中、识别成功、识别失败、网络失败均有明确反馈 & 异常场景测试 \\
+性能表现 & 演示设备上相机预览流畅，识别反馈满足现场互动需要 & 真机运行观察 \\
+文档交付 & 提供立项书、技术架构说明、演示说明和后续规划 & 文档审阅 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{后续规划}
+
+\begin{itemize}
+  \item 扩展课程词库，引入更多校园活动常用表达和基础日常表达。
+  \item 将识别规则从硬编码逐步迁移为可配置参数，降低新增词汇成本。
+  \item 增加练习历史、学习成就和活动打卡能力，增强活动传播效果。
+  \item 完善 iOS 原生识别链路，提升多端可用性。
+  \item 引入真实用户测试数据，持续优化动作建议、识别阈值和误识别处理。
+\end{itemize}
+
+\section{结论}
+
+\projectname{} 具备明确的公益价值、清晰的用户场景和可落地的技术基础。项目通过 Flutter 应用、原生相机、MediaPipe 手部关键点识别、课程闯关和 AI 动作建议，将手语学习转化为可参与、可反馈、可传播的校园互动体验。建议立项推进首期展示版本，并以校园公益活动为试点完成真实场景验证，再逐步扩展词库、平台和教学能力。
+
+\end{document}
