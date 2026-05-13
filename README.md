@@ -66,7 +66,7 @@
       <sub>像单词 App 一样搜索、分类和浏览手语词卡</sub>
     </td>
     <td width="33%" align="center">
-      <img src=".github/readme/screen-challenge.jpg" alt="手语闯关" width="100%" />
+      <img src=".github/readme/screen-challenge-large.jpg" alt="手语闯关" width="100%" />
       <br />
       <strong>手语闯关</strong>
       <br />
