@@ -16,6 +16,7 @@
 
   <p>
     <img src="https://img.shields.io/badge/Award-%E5%8D%8E%E5%8C%97%E8%B5%9B%E5%8C%BA%E4%B8%80%E7%AD%89%E5%A5%96-D4A017?style=for-the-badge" alt="中国高校计算机大赛 AIGC 创新赛华北赛区一等奖" />
+    <img src="https://img.shields.io/badge/Course_Project-%E6%80%BB%E5%88%86%E7%AC%AC%E4%B8%80-2E8C7A?style=for-the-badge" alt="南开大学《算法导论》课程大作业总分第一" />
     <img src="https://img.shields.io/badge/Product-Sign%20Language%20Learning-7B61FF?style=for-the-badge" alt="Product" />
     <img src="https://img.shields.io/badge/Mode-Challenge%20%2B%20Flashcards-FF8A7A?style=for-the-badge" alt="Mode" />
     <img src="https://img.shields.io/badge/Goal-Daily%20Vocabulary%20Coverage-2E8C7A?style=for-the-badge" alt="Goal" />
@@ -48,7 +49,8 @@
 ## ✦ 赛事荣誉
 
 > [!TIP]
-> **中国高校计算机大赛 AIGC 创新赛 · 华北赛区一等奖**
+> - **中国高校计算机大赛 AIGC 创新赛 · 华北赛区一等奖**
+> - **南开大学《算法导论》课程大作业 · 获评总分第一（4,000 元人民币）**
 
 Silent Voice 围绕手语学习与无障碍沟通，将移动端交互、实时手部关键点识别和游戏化学习路径组合为可现场体验、可持续扩展的产品原型。
 
